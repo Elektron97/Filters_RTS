@@ -24,6 +24,9 @@
 #include "tlib.h"
 
 /*DEFINE*/
+//Math
+#define PI 3.14159
+
 //Graphics
 #define WIDTH 800
 #define HEIGHT 700
@@ -38,14 +41,33 @@
 #define GRAPHIC_TASK_INDEX 1
 
 //Period
-#define FILTERS_PERIOD 10
-#define GRAPHIC_PERIOD 50
+#define FILTERS_PERIOD 10 //100 Hz
+#define GRAPHIC_PERIOD 10
 
 //Deadline
-#define GRAPHIC_DREL 50
+#define FILTER_DREL 10
+#define GRAPHIC_DREL 10
 
 //Priority
+#define FILTER_PRIO 20
 #define GRAPHIC_PRIO 23
+/*struct Point2D
+{
+	double x;
+	double y;
+};*/
+
+struct signals
+{
+	double amplitude;
+	double frequency;
+
+	double time;
+	double value;
+};
+
+/*GLOBAL VARIABLE*/
+struct signals signal;
 
 //INITIALIZATION
 void init()
@@ -72,7 +94,7 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 	return y_k;
 }
 
-void plotSignals(double frequency, int n_period)
+/*void plotSignals(double frequency, int n_period, int color)
 {
 	const int scale_time = 20000;
 	const int scale_y = 100;
@@ -80,31 +102,52 @@ void plotSignals(double frequency, int n_period)
 	{
 		double x2 = scale_time*t;
 		double y2 = HEIGHT/2 + scale_y*sin(2*3.14*frequency*t);
-		putpixel(screen, x2, y2, YELLOW);
+		putpixel(screen, x2, y2, color);
 	}
 	
+}*/
+
+void plotSignals(struct signals signal, int color)
+{
+	const int scale_time = 20000;
+	const int scale_y = 100;
+
+	double x2 = scale_time*signal.time;
+	double y2 = HEIGHT/2 + scale_y*signal.value;
+	putpixel(screen, x2, y2, color);
 }
 
 void *filters_task(void *arg)
 {
-	//set_activation(FILTERS_TASK_INDEX);
+	//Gestisco il tempo
+	set_activation(FILTERS_TASK_INDEX);
+	//Test
+	//get time in seconds
+	double time = (double) get_task_period(filters_task)/1000; 
 
+	signal.frequency = 1/FILTERS_PERIOD;
+	signal.time = time;
+	signal.amplitude = 100;
+	signal.value = signal.amplitude*sin(2*PI*signal.frequency*signal.time);
 
-
-
-
-
+	wait_for_activation(FILTERS_TASK_INDEX);
 
 	return NULL;
 }
+
+/*void *user_task(void *arg)
+{
+
+	return NULL;
+}*/
 
 //Graphic Task
 void *graphic_task(void *arg)
 {
 	set_activation(GRAPHIC_TASK_INDEX);
-	plotSignals(100.0, 1);
-	wait_for_activation(GRAPHIC_TASK_INDEX);
+	plotSignals(signal, YELLOW);
 
+	wait_for_activation(GRAPHIC_TASK_INDEX);
 	return NULL;
 }
 
@@ -114,8 +157,8 @@ int main()
 	init();
 
 	task_create(graphic_task, GRAPHIC_TASK_INDEX, GRAPHIC_PERIOD, GRAPHIC_DREL, GRAPHIC_PERIOD);
+	task_create(filters_task, FILTERS_TASK_INDEX, FILTERS_PERIOD, FILTER_DREL, FILTER_PRIO);
 
-	readkey();
 	allegro_exit();
 	return 0;
 }
