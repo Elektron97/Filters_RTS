@@ -42,6 +42,19 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 	return y_k;
 }
 
+void printSignals(double frequency, int n_period)
+{
+	const int scale_time = 20000;
+	const int scale_y = 100;
+	for(double t = 0; t <n_period/frequency; t+=1/(100*frequency))
+	{
+		double x2 = scale_time*t;
+		double y2 = HEIGHT/2 + scale_y*sin(2*3.14*frequency*t);
+		putpixel(screen, x2, y2, 14);
+	}
+	
+}
+
 int main()
 {
 	/*Init*/
@@ -54,9 +67,9 @@ int main()
 	set_gfx_mode(GFX_AUTODETECT_WINDOWED, WIDTH, HEIGHT, 0, 0);
 
 	//Clear Screen: ("global BITMAP called screen")
-	clear_to_color(screen, BLACK); //Black Backg(round
+	clear_to_color(screen, BLACK); //Black Background
 
-	circlefill(screen, 100, 100, 50, 4);
+	printSignals(100.0, 1);
 
 	readkey();
 	allegro_exit();
