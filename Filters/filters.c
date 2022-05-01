@@ -51,6 +51,11 @@
 //Priority
 #define FILTER_PRIO 20
 #define GRAPHIC_PRIO 23
+
+//Flag
+int end = 0;
+int command = 0;
+
 /*struct Point2D
 {
 	double x;
@@ -115,6 +120,7 @@ void plotSignals(struct signals signal, int color)
 	double x2 = scale_time*signal.time;
 	double y2 = HEIGHT/2 + scale_y*signal.value;
 	putpixel(screen, x2, y2, color);
+	//readkey();
 }
 
 void *filters_task(void *arg)
@@ -122,15 +128,18 @@ void *filters_task(void *arg)
 	//Gestisco il tempo
 	set_activation(FILTERS_TASK_INDEX);
 	//Test
-	//get time in seconds
-	double time = (double) get_task_period(filters_task)/1000; 
+	while(!end)
+	{
+		//get time in seconds
+		double time = (double) get_task_period(filters_task)/1000; 
 
-	signal.frequency = 1/FILTERS_PERIOD;
-	signal.time = time;
-	signal.amplitude = 100;
-	signal.value = signal.amplitude*sin(2*PI*signal.frequency*signal.time);
+		signal.frequency = 1/FILTERS_PERIOD;
+		signal.time = time;
+		signal.amplitude = 100;
+		signal.value = signal.amplitude*sin(2*PI*signal.frequency*signal.time);
 
-	wait_for_activation(FILTERS_TASK_INDEX);
+		wait_for_activation(FILTERS_TASK_INDEX);
+	}
 
 	return NULL;
 }
@@ -145,9 +154,19 @@ void *filters_task(void *arg)
 void *graphic_task(void *arg)
 {
 	set_activation(GRAPHIC_TASK_INDEX);
-	plotSignals(signal, YELLOW);
 
-	wait_for_activation(GRAPHIC_TASK_INDEX);
+	while(!end)
+	{
+		plotSignals(signal, YELLOW);
+
+		if (deadline_miss(GRAPHIC_TASK_INDEX)) 
+		{			//check deadline miss
+			printf("graphic_task deadline miss %d\n", param[GRAPHIC_TASK_INDEX].dmiss);
+			//dlm_graphic++;
+		}
+
+		wait_for_activation(GRAPHIC_TASK_INDEX);
+	}
 	return NULL;
 }
 

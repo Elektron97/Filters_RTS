@@ -40,7 +40,7 @@ int task_create (void* (*task)(void *), int i, int period, int drel, int prio)
 	if (tret != 0) printf("Unable to create thread %d", i);
 	pthread_attr_destroy(&attributi);
 	return tret;
-	}
+}
 
 
 /*-------------------------------------------------------------------------------------------------------------------------------------------------------------*/
