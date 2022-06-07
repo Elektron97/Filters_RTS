@@ -53,7 +53,8 @@ void time_add_ms(struct timespec *t, int ms)
  * return 1: t1 > t2
  * return -1: t1 < t2 */
 
-int time_cmp(struct timespec t1, struct timespec t2){
+int time_cmp(struct timespec t1, struct timespec t2)
+{
 	if (t1.tv_sec > t2.tv_sec) return 1;
 	if (t1.tv_sec < t2.tv_sec) return -1;
 	if (t1.tv_nsec > t2.tv_nsec) return 1;
