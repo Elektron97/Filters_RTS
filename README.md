@@ -5,5 +5,5 @@ Author: Daniele Caradonna.
 
 ### Note to compile and run
 - **To compile**: `/project_folder/make`
-- **To run**: `sudo ./make`
+- **To run**: `sudo ./filters`
 
