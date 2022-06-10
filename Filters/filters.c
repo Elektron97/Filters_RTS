@@ -23,6 +23,6 @@
 
 int main(void)
 {
-    printf("Ciao!");
+    printf("Ciao!\n");
     return 0;
 }
