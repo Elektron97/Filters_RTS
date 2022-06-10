@@ -32,10 +32,8 @@ int main(void)
     int task_report;
 
     printf("Ciao!\n");
-
     task_report = task_create(helloWorldTask, IDX, PER, PER, PRIO);
-
-
+    printf("Hello World Task! \n");
 
     return 0;
 }
@@ -47,7 +45,7 @@ void *helloWorldTask(void* arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
-    while(!end)
+    while(!end_flag)
     {
         printf("Hello World! \n");
         deadline_miss(idx);
