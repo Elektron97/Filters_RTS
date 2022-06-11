@@ -13,7 +13,8 @@ CFLAGS = -Wall -lpthread -lrt
 #-----------------------------------------------------------------------
 OBJ1 = taskLib
 OBJ2 = timeLib
-OBJS = $(MAIN).o $(OBJ1).o $(OBJ2).o
+OBJ3 = filtersLib
+OBJS = $(MAIN).o $(OBJ1).o $(OBJ2).o $(OBJ3).o
 #-----------------------------------------------------------------------
 # LIBS are the external libraried to be used
 #-----------------------------------------------------------------------
@@ -33,5 +34,13 @@ $(OBJ1).o: $(OBJ1).c
 $(OBJ2).o: $(OBJ2).c
 	$(CC) $(CFLAGS) -c $(OBJ2).c
 
+$(OBJ3).o: $(OBJ3).c
+	$(CC) $(CFLAGS) -c $(OBJ3).c
+
+.PHONY: clean
+
+#clean:
+#	rm *.o $(MAIN)
+
 clean:
-	rm *.o $(MAIN)
+	rm -f	$(MAIN).o	$(MAIN) $(OBJ1).o	$(OBJ1) $(OBJ2).o	$(OBJ2) $(OBJ3).o	$(OBJ3)
