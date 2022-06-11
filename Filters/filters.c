@@ -27,9 +27,10 @@ int end_flag = 0;
 /*FUNCTION SIGNATURES*/
 void *helloWorldTask(void* arg);
 
+/*MAIN*/
 int main(void)
 {
-    int task_report;
+    int task_report; // 0: Ok | 1: Task Issues
 
     printf("Ciao!\n");
     task_report = task_create(helloWorldTask, IDX, PER, PER, PRIO);
@@ -39,6 +40,7 @@ int main(void)
     return 0;
 }
 
+/*FUNCTIONS*/
 void *helloWorldTask(void* arg)
 {
     int idx;
