@@ -33,7 +33,8 @@ int main(void)
 
     printf("Ciao!\n");
     task_report = task_create(helloWorldTask, IDX, PER, PER, PRIO);
-    printf("Hello World Task! \n");
+    printf("Hello World Task! Report: %d \n", task_report);
+    wait_for_task(IDX);
 
     return 0;
 }
@@ -48,8 +49,12 @@ void *helloWorldTask(void* arg)
     while(!end_flag)
     {
         printf("Hello World! \n");
-        deadline_miss(idx);
+        
+        if(deadline_miss(idx))
+            printf("******Deadline Miss!******** \n");
+
         wait_for_activation(idx);
     }
-    
+
+    return NULL;
 }
