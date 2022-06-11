@@ -56,15 +56,28 @@ void *waveTask(void* arg)
     int idx = get_task_index(arg);
     set_activation(idx);
 
+    int k = 0;
+    double time = 0;
+    double amplitude = 0;
+
     while(!end_flag)
     {
-        /************************
-         * Body of Task here:   *
-         ************************/
+        time = k*time_step;
+        amplitude = HEIGHT/2 + 100*sin(2*PI*1000*time);
+
+        //Draw points
+        putpixel(screen, time, amplitude, YELLOW);
+        printf("k: %d\n", k);
+        printf("current_time = %f\n", time);
+        printf("current amplitude = %f\n", amplitude);
+
+        //Successive sample
+        k++;
+
 
         if(deadline_miss(idx))
             printf("******Deadline Miss of Wave Task!******** \n");
-
+        
         wait_for_activation(idx);
     }
 

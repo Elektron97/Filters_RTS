@@ -16,6 +16,9 @@
 #define TIME_SCALE 0.01 
 #define time_step TIME_SCALE*WAVE_PER // TIME_SCALE*WAVE_PER -> 10 KHz
 
+//Math constants
+#define PI 3.14159
+
 //graphics parameters
 #define WIDTH 800
 #define HEIGHT 600
