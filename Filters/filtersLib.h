@@ -2,10 +2,19 @@
 #define FILTERSLIB_H_
 
 /*DEFINE*/
-//task parameters
-#define PER 40
+//general task parameters
+#define PER 40 // [ms]
 #define PRIO 1
-#define IDX 1
+#define IDX 2
+
+//wave task parameters
+#define WAVE_PER 10 // [ms] -> 100 Hz
+#define WAVE_PRIO 1
+#define WAVE_IDX 1
+
+//Discrete Integration
+#define TIME_SCALE 0.01 
+#define time_step TIME_SCALE*WAVE_PER // TIME_SCALE*WAVE_PER -> 10 KHz
 
 //graphics parameters
 #define WIDTH 800

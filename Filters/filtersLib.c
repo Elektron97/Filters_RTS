@@ -60,7 +60,7 @@ void *waveTask(void* arg)
     {
         /************************
          * Body of Task here:   *
-         * **********************/
+         ************************/
 
         if(deadline_miss(idx))
             printf("******Deadline Miss of Wave Task!******** \n");
