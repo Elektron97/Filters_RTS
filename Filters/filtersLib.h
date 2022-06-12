@@ -52,26 +52,6 @@ enum Signal_Type
     triang
 };
 
-/*enum Colors
-{
-    BLACK,
-    BLUE,
-    GREEN,
-    CYAN,
-    RED,
-    MAGENTA,
-    BROWN,
-    LIGHT_GRAY,
-    DARK_GRAY,
-    LIGHT_BLUE,
-    LIGHT_GREEN,
-    LIGHT_CYAN,
-    LIGHT_RED,
-    LIGHT_MAGENTA,
-    YELLOW,
-    WHITE
-};*/
-
 /*STRUCTURES*/
 struct Signal
 {
@@ -83,6 +63,8 @@ struct Signal
 
 /*FUNCTION SIGNATURES*/
 //Functions
+double sign(double x);
+double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 void plotPoint(double time, double y, int color);
 double signalRealization(struct Signal signal, double time);
 void printSignal(struct Signal signal);

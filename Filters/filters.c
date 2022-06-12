@@ -30,7 +30,7 @@ int main(void)
     wait_for_task(IDX);*/
 
     task_report = task_create(waveTask, WAVE_IDX, WAVE_PER, WAVE_PER, WAVE_PRIO);
-    printf("Wave World Task! Report: %d\n", task_report);
+    printf("Wave Task! Report: %d\n", task_report);
     wait_for_task(WAVE_IDX);
 
     allegro_exit();

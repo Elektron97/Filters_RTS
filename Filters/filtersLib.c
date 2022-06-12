@@ -17,6 +17,25 @@
 int end_flag = 0;
 
 /*FUNCTIONS*/
+double sign(double x)
+{
+    if(x > 0)
+        return 1.0;
+    if(x < 0)
+        return -1.0;
+    else
+        return 0.0;
+}
+
+//Low Pass Filter
+double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
+{
+	double p = exp(-a*Ts);
+	double y_k = p*y_k_1 + (1-p)*x_k_1;
+
+	return y_k;
+}
+
 void plotPoint(double time, double y, int color)
 {
     //scaled_time = (WIDTH/XLIM)*time;
@@ -29,7 +48,6 @@ void plotPoint(double time, double y, int color)
 double signalRealization(struct Signal signal, double time)
 {
     double y;
-    int n_period = n_period = (time + signal.phase)*signal.frequency;
 
     switch(signal.signal_type)
     {
@@ -39,25 +57,13 @@ double signalRealization(struct Signal signal, double time)
         break;
 
         case square:
-        //Periodicity
-        if(n_period >= 1)
-            time -= n_period/signal.frequency + signal.phase;
-
-        //Rect
-        if((time + signal.phase) <= 1/(2*signal.frequency))
-            y = signal.amplitude;
-
-        else
-            y = -signal.amplitude;
-
+        y = signal.amplitude*sign(sin(2*PI*signal.frequency*time + signal.phase));
         break;
 
         default:
         y = 0.0;
         printf("Singal Type not valid. Output setted to zero\n");
         break;
-
-
     }
 
     return y;
@@ -138,29 +144,28 @@ void *waveTask(void* arg)
     int k = 0;
     double time = 0.0;
     double y = 0.0;
-    double y2 = 0.0;
+    //double y2 = 0.0;
 
     struct Signal signal = {1.0, 10.0, 0.0, sinusoid};
-    struct Signal signal2 = {1.0, 10.0, PI/4, sinusoid};
+    //struct Signal signal2 = {1.0, 10.0, PI/4, square};
 
     const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
 
     //Print Information
     printf("Wave Task Period: %d\n", WAVE_PER);
     printSignal(signal);
-    printSignal(signal2);
+    //printSignal(signal2);
 
     while((!end_flag) && ((WIDTH/XLIM)*time <= WIDTH))
     {
         /*COMPUTE SIGNAL*/
-        //y(k) = Asin(w*kTs + phi)
         time = k*Ts;
         y = signalRealization(signal, time);
-        y2 = signalRealization(signal2, time);
+        //y2 = signalRealization(signal2, time);
 
         /*DRAW POINTS*/
         plotPoint(time, y, YELLOW);
-        plotPoint(time, y2, WHITE);
+        //plotPoint(time, y2, WHITE);
 
         //Debug information
         /*printf("******** Iteration %d **********\n", k);
