@@ -8,7 +8,7 @@
 #define IDX 2
 
 //wave task parameters
-#define WAVE_PER 100 // [ms] -> 10 Hz
+#define WAVE_PER 100 // [ms]
 #define WAVE_PRIO 1
 #define WAVE_IDX 1
 
@@ -48,7 +48,7 @@ enum Signal_Type
 {
     sinusoid,
     square,
-    saw,
+    sawtooth,
     triang
 };
 

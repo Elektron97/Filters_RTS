@@ -52,17 +52,27 @@ double signalRealization(struct Signal signal, double time)
     switch(signal.signal_type)
     {
         case sinusoid:
-        // y(k) = Asin(wt + phi)
+        // y(k) = A sin(wt + phi)
         y = signal.amplitude*sin(2*PI*signal.frequency*time + signal.phase);
         break;
 
         case square:
+        // y(k) = A sgn(sin(wt + phi))
         y = signal.amplitude*sign(sin(2*PI*signal.frequency*time + signal.phase));
+        break;
+
+        case sawtooth:
+        //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*time + signal.phase)));
+        y = (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*time + signal.phase)));
+        break;
+
+        case triang:
+        y = (2*signal.amplitude/PI) * asin(sin(2*PI*signal.frequency*time + signal.phase));
         break;
 
         default:
         y = 0.0;
-        printf("Singal Type not valid. Output setted to zero\n");
+        printf("Singal Type not valid. Output setted to zero!\n");
         break;
     }
 
@@ -81,6 +91,14 @@ void printSignal(struct Signal signal)
 
         case square:
         printf("* Signal Type: \t Square\n");
+        break;
+
+        case sawtooth:
+        printf("* Signal Type: \t Sawtooth\n");
+        break;
+
+        case triang:
+        printf("* Signal Type: \t Triangular\n");
         break;
 
         default:
@@ -132,7 +150,7 @@ void *helloWorldTask(void* arg)
 void *waveTask(void* arg)
 {
     /***********************************TASK DESCRIPTION*************************
-     * Plot sinusoidal signal.                                                  *
+     * Plot signals of 4 types: Sawtooth, Triangular, Sinusoid, Square.         *
      * Time axis is rescaled in a range of [0, XLIM] (instead [0, WIDTH])       *
      * Amplitude axis is rescaled in a range of [-1, 1] (instead [0, HEIGHT])   *    
      ****************************************************************************/
@@ -146,7 +164,7 @@ void *waveTask(void* arg)
     double y = 0.0;
     //double y2 = 0.0;
 
-    struct Signal signal = {1.0, 10.0, 0.0, sinusoid};
+    struct Signal signal = {1.0, 10.0, 0.0, triang};
     //struct Signal signal2 = {1.0, 10.0, PI/4, square};
 
     const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
