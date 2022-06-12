@@ -17,11 +17,19 @@
 int end_flag = 0;
 
 /*FUNCTIONS*/
+void plotPoint(double time, double y, int color)
+{
+    //scaled_time = (WIDTH/XLIM)*time;
+    //scaled_y = (HEIGHT/2) + (HEIGHT/2 - 1)*y;
+
+    //Rescale & Plot
+    putpixel(screen, (WIDTH/XLIM)*time, (HEIGHT/2) + (HEIGHT/2 - 1)*y, color);
+}
+
 double signalRealization(struct Signal signal, double time)
 {
     double y;
     int n_period = n_period = (time + signal.phase)*signal.frequency;
-    printf("Number of Periods: %d", n_period);
 
     switch(signal.signal_type)
     {
@@ -119,9 +127,9 @@ void *waveTask(void* arg)
 {
     /***********************************TASK DESCRIPTION*************************
      * Plot sinusoidal signal.                                                  *
-     * Time axis is rescaled in a range of [0, XLIM] (instead [0, WIDTH])         *
-     * Amplitude axis is rescaled in a range of [-1, 1] (instead [0, HEIGHT])    *    
-     ***************************************************************************/
+     * Time axis is rescaled in a range of [0, XLIM] (instead [0, WIDTH])       *
+     * Amplitude axis is rescaled in a range of [-1, 1] (instead [0, HEIGHT])   *    
+     ****************************************************************************/
 
     int idx = get_task_index(arg);
     set_activation(idx);
@@ -130,35 +138,34 @@ void *waveTask(void* arg)
     int k = 0;
     double time = 0.0;
     double y = 0.0;
-    double scaled_time = 0.0;
-    double scaled_y = 0.0;
+    double y2 = 0.0;
 
     struct Signal signal = {1.0, 10.0, 0.0, sinusoid};
+    struct Signal signal2 = {1.0, 10.0, PI/4, sinusoid};
+
     const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
 
     //Print Information
     printf("Wave Task Period: %d\n", WAVE_PER);
     printSignal(signal);
+    printSignal(signal2);
 
-    while((!end_flag) && (scaled_time < WIDTH))
+    while((!end_flag) && ((WIDTH/XLIM)*time <= WIDTH))
     {
         /*COMPUTE SIGNAL*/
         //y(k) = Asin(w*kTs + phi)
         time = k*Ts;
         y = signalRealization(signal, time);
+        y2 = signalRealization(signal2, time);
 
         /*DRAW POINTS*/
-        scaled_time = (WIDTH/XLIM)*time;
-        scaled_y = (HEIGHT/2) + (HEIGHT/2 - 1)*y;
-        //Rescale & Plot
-        putpixel(screen, scaled_time, scaled_y, YELLOW);
+        plotPoint(time, y, YELLOW);
+        plotPoint(time, y2, WHITE);
 
         //Debug information
-        printf("******** Iteration %d **********\n", k);
+        /*printf("******** Iteration %d **********\n", k);
         printf("t = \t %f [s]\n", time);
-        printf("y = \t %f\n", y);
-        /*printf("Rescale time = \t %f\n", scaled_time);
-        printf("Rescale y = \t %f\n", scaled_y);*/
+        printf("y = \t %f\n", y);*/
 
         //Successive sample
         k++;

@@ -25,9 +25,23 @@
 //axis limit
 #define XLIM 1.0
 
-//colours
-#define BLACK 0
-#define YELLOW 14
+//Colors
+#define BLACK           0
+#define BLUE            1
+#define GREEN           2
+#define CYAN            3
+#define RED             4
+#define MAGENTA         5
+#define BROWN           6
+#define LIGHT_GRAY      7
+#define DARK_GRAY       8
+#define LIGHT_BLUE      9
+#define LIGHT_GREEN     10
+#define LIGHT_CYAN      11
+#define LIGHT_RED       12
+#define LIGHT_MAGENTA   13
+#define YELLOW          14
+#define WHITE           15
 
 /*ENUMS*/
 enum Signal_Type 
@@ -37,6 +51,26 @@ enum Signal_Type
     saw,
     triang
 };
+
+/*enum Colors
+{
+    BLACK,
+    BLUE,
+    GREEN,
+    CYAN,
+    RED,
+    MAGENTA,
+    BROWN,
+    LIGHT_GRAY,
+    DARK_GRAY,
+    LIGHT_BLUE,
+    LIGHT_GREEN,
+    LIGHT_CYAN,
+    LIGHT_RED,
+    LIGHT_MAGENTA,
+    YELLOW,
+    WHITE
+};*/
 
 /*STRUCTURES*/
 struct Signal
@@ -49,6 +83,7 @@ struct Signal
 
 /*FUNCTION SIGNATURES*/
 //Functions
+void plotPoint(double time, double y, int color);
 double signalRealization(struct Signal signal, double time);
 void printSignal(struct Signal signal);
 
