@@ -15,13 +15,28 @@
 //Math constants
 #define PI 3.14159
 
+//Discrete Time Constants
+#define N_SAMPLE_PERIOD 100 //n samples in a period
+
 //graphics parameters
 #define WIDTH 800
 #define HEIGHT 600
 
+//axis limit
+#define XLIM 1.0
+
 //colours
 #define BLACK 0
 #define YELLOW 14
+
+/*ENUMS*/
+enum Signal_Type 
+{
+    sinusoid,
+    square,
+    saw,
+    triang
+};
 
 /*STRUCTURES*/
 struct Signal
@@ -29,7 +44,7 @@ struct Signal
     double amplitude;
     double frequency;
     double phase;
-    //To add here: type of signals
+    enum Signal_Type signal_type;
 };
 
 /*FUNCTION SIGNATURES*/
