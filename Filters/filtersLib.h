@@ -8,13 +8,9 @@
 #define IDX 2
 
 //wave task parameters
-#define WAVE_PER 10 // [ms] -> 100 Hz
+#define WAVE_PER 100 // [ms] -> 10 Hz
 #define WAVE_PRIO 1
 #define WAVE_IDX 1
-
-//Discrete Integration
-#define TIME_SCALE 0.01 
-#define time_step TIME_SCALE*WAVE_PER // TIME_SCALE*WAVE_PER -> 10 KHz
 
 //Math constants
 #define PI 3.14159
@@ -27,8 +23,24 @@
 #define BLACK 0
 #define YELLOW 14
 
+/*STRUCTURES*/
+struct Signal
+{
+    double amplitude;
+    double frequency;
+    double phase;
+    //To add here: type of signals
+};
+
 /*FUNCTION SIGNATURES*/
+//Functions
+double signalRealization(struct Signal signal, double time);
+void printSignal(struct Signal signal);
+
+//Init
 void init();
+
+//Tasks
 void *helloWorldTask(void* arg);
 void *waveTask(void* arg);
 
