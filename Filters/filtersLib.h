@@ -52,6 +52,14 @@ enum Signal_Type
     triang
 };
 
+enum Filters_Type
+{
+    LOW_PASS,
+    HIGH_PASS,
+    BAND_PASS,
+    BAND_STOP
+};
+
 /*STRUCTURES*/
 struct Signal
 {

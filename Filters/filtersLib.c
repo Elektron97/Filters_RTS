@@ -30,6 +30,17 @@ double sign(double x)
 //Low Pass Filter
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 {
+    /************************************************
+     *  LOW PASS FILTER:                            *
+     * This function compute the discrete time form *
+     * of transfer function G(s):                   *
+     *              a                               *
+     * G(s) =  -----------                          *
+     *          s   +   a                           *      
+     *                                              *    
+     * a = omega_cut = 2*PI*f_cut                   *
+     ************************************************/
+
 	double p = exp(-a*Ts);
 	double y_k = p*y_k_1 + (1-p)*x_k_1;
 
@@ -162,28 +173,30 @@ void *waveTask(void* arg)
     int k = 0;
     double time = 0.0;
     double y = 0.0;
-    //double y2 = 0.0;
 
-    struct Signal signal = {1.0, 10.0, 0.0, triang};
-    //struct Signal signal2 = {1.0, 10.0, PI/4, square};
+    double y_filtered = 0.0;
+
+    struct Signal signal = {1.0, 30.0, 0.0, sinusoid};
 
     const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
 
     //Print Information
     printf("Wave Task Period: %d\n", WAVE_PER);
     printSignal(signal);
-    //printSignal(signal2);
 
     while((!end_flag) && ((WIDTH/XLIM)*time <= WIDTH))
     {
+        //Test Filters
+        //Filters algorithm needs y(k-1) and x(k-1)
+        y_filtered = lowPassFilter(y_filtered, y, 2*PI*10, Ts);
+
         /*COMPUTE SIGNAL*/
         time = k*Ts;
         y = signalRealization(signal, time);
-        //y2 = signalRealization(signal2, time);
 
         /*DRAW POINTS*/
         plotPoint(time, y, YELLOW);
-        //plotPoint(time, y2, WHITE);
+        plotPoint(time, y_filtered, WHITE);
 
         //Debug information
         /*printf("******** Iteration %d **********\n", k);
