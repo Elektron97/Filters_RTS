@@ -7,6 +7,10 @@
 #define MAX_SIGNALS 10
 #define MAX_FILTERS 10
 
+//min and maximum frequency
+#define FREQ_MIN 0          // Constant Signal
+#define FREQ_MAX 100        // 100 Hz
+
 /*Task Parameters*/
 //Index
 #define GIDX (MAX_SIGNALS + 1) //Graphic Task
@@ -21,11 +25,6 @@
 #define FILTER_PRIO     3
 #define GRAPHIC_PRIO    2
 #define USER_PRIO       1
-
-//wave task parameters
-#define WAVE_PER 100 // [ms]
-#define WAVE_PRIO 1 // Note on priority: 1 (low) - 99 (high)
-#define WAVE_IDX 1
 
 //Math constants
 #define PI 3.14159
@@ -90,6 +89,8 @@ struct Signal
     double frequency;   //[Hz]
     double phase;       //[rad]
     double Ts;          //[s]
+    int    k;           //k-th sample
+    int    color;
     enum Signal_Type signal_type;
 };
 
@@ -118,6 +119,7 @@ void printSignal(struct Signal signal);
 void init();
 void set_Ts(int idx);
 void init_signal(int idx);
+void clear_reset(int idx);
 
 //Keyboard Interpreter
 void keyboard_interp();

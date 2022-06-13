@@ -121,7 +121,7 @@ void printSignal(struct Signal signal)
     printf("* Frequency:  \t %f [Hz]\n", signal.frequency);
     printf("* Amplitude: \t %f\n", signal.amplitude);
     printf("* Phase: \t %f [rad]\n", signal.phase);
-    printf("* Ts: \t %f [s]\n", signal.Ts);
+    printf("* Ts: \t \t %f [s]\n", signal.Ts);
     printf("***************************************\n");
 }
 
@@ -131,6 +131,8 @@ void init()
     install_keyboard();
 
     set_color_depth(8); //256 VGA
+
+    srand(time(0)); //Init random numbers
 
     //Enter in Graphics mode with full screen(width, height)
 	set_gfx_mode(GFX_AUTODETECT_WINDOWED, WIDTH, HEIGHT, 0, 0);
@@ -155,14 +157,23 @@ void init_signal(int idx)
 {
     /****************************************************
      * INIT SIGNAL: Define initial parameter of signal. *
-     * Default signal: Sinusoidal Wave 1 Hz.            *
      ****************************************************/
-    signals[idx].amplitude =    1.0;
-    signals[idx].frequency =    1.0;        //[Hz]
-    signals[idx].phase =        0.0;        //[rad]
-    signals[idx].signal_type =  sinusoid;
+    signals[idx].amplitude =    frand(0.1, 1.0);
+    signals[idx].frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
+    signals[idx].phase =        frand(0, 2*PI);             //[rad]
+    signals[idx].k =            0;
+    signals[idx].signal_type =  floor(frand(sinusoid, triang));
+    signals[idx].color =        floor(frand(WHITE, BLACK));
 
     set_Ts(idx);
+}
+
+void clear_reset(int idx)
+{
+    //Clear Screen
+    clear_to_color(screen, BLACK); //Black Background
+    //Reset Plot
+    signals[idx].k = 0;
 }
 
 void keyboard_interp()
@@ -191,18 +202,68 @@ void keyboard_interp()
         break;
 
         case KEY_PLUS_PAD:
-        signals[n_active_signals-1].frequency += 5;
-        //Re-compute Sampling Period
-        set_Ts(n_active_signals-1);
-        //printSignal(signals[n_active_signals-1]);
+        if(signals[n_active_signals-1].frequency + 5 <= FREQ_MAX)
+        {
+            signals[n_active_signals-1].frequency += 5;
+            //Re-compute Sampling Period
+            set_Ts(n_active_signals-1);
+            printSignal(signals[n_active_signals-1]);
 
-        //Clear and reprint
+            //Clear and reprint
+            clear_reset(n_active_signals-1);
+            printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
+        }
+        
+        else
+        {
+            if(signals[n_active_signals-1].frequency == FREQ_MAX)
+                printf("[PLUS] Increment of signal's frequency not permitted: Maximum reached.\n");
 
-        printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
+            else
+            {
+                signals[n_active_signals-1].frequency = FREQ_MAX;
+                //Re-compute Sampling Period
+                set_Ts(n_active_signals-1);
+                printSignal(signals[n_active_signals-1]);
+
+                //Clear and reprint
+                clear_reset(n_active_signals-1);
+            }
+                
+        }
         break;
 
-        /*case KEY_MINUS_PAD:
-        break;*/
+        case KEY_MINUS_PAD:
+        if(signals[n_active_signals-1].frequency - 5 >= FREQ_MIN)
+        {
+            signals[n_active_signals-1].frequency -= 5;
+            //Re-compute Sampling Period
+            set_Ts(n_active_signals-1);
+            printSignal(signals[n_active_signals-1]);
+
+            //Clear and reprint
+            clear_reset(n_active_signals-1);
+            printf("[MINUS] Decrement of 5 Hz last signal's frequency.\n");
+        }
+        
+        else
+        {
+            if(signals[n_active_signals-1].frequency == FREQ_MIN)
+                printf("[MINUS] Decrement of signal's frequency not permitted: Minimum reached.\n");
+
+            else
+            {
+                signals[n_active_signals-1].frequency = FREQ_MIN;
+                //Re-compute Sampling Period
+                set_Ts(n_active_signals-1);
+                printSignal(signals[n_active_signals-1]);
+
+                //Clear and reprint
+                clear_reset(n_active_signals-1);
+            }
+                
+        }
+        break;
 
         /*EXIT CONDITION*/
         case KEY_ESC:
@@ -297,34 +358,36 @@ void *filterTask(void* arg)
     set_activation(idx);
 
     init_signal(idx);
+    printSignal(signals[idx]);
 
     //Local Variables
-    int k = 0;
     double time = 0.0;
     double y = 0.0;
-    //double y_filtered = 0.0;
+    double y_filtered = 0.0;
+
+    int filter_color = floor(frand(WHITE, BLACK));
 
     while(!end_flag)
     {
         /***********BODY OF TASK**********/
+        //Filters algorithm needs y(k-1) and x(k-1)
+        y_filtered = lowPassFilter(y_filtered, y, 2*PI*signals[idx].frequency/3, signals[idx].Ts);
+
         /*COMPUTE SIGNAL*/
-        time = k*signals[idx].Ts;
+        time = signals[idx].k*signals[idx].Ts;
         y = signalRealization(signals[idx], time);
 
         /*DRAW POINTS*/
-        plotPoint(time, y, YELLOW);
+        plotPoint(time, y, signals[idx].color);
+        plotPoint(time, y_filtered, filter_color);
 
         //Successive sample
-        k++;
+        signals[idx].k++;
 
-        //Replot Signal
+        //Replot Signal when it reaches XLIM
         if((WIDTH/XLIM)*time > WIDTH)
-        {
-            //Clear Screen
-	        clear_to_color(screen, BLACK); //Black Background
-            //Reset Local Variables
-            k = 0;
-        }
+            clear_reset(idx);
+        
         /*********************************/
 
         if(deadline_miss(idx))
