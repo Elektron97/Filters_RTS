@@ -23,15 +23,9 @@ int main(void)
     init();
 
     int task_report; // 0: Ok | 1: Task Issues
-
-    /*printf("Ciao!\n");
-    task_report = task_create(helloWorldTask, IDX, PER, PER, PRIO);
-    printf("Hello World Task! Report: %d \n", task_report);
-    wait_for_task(IDX);*/
-
-    task_report = task_create(waveTask, WAVE_IDX, WAVE_PER, WAVE_PER, WAVE_PRIO);
-    printf("Wave Task! Report: %d\n", task_report);
-    wait_for_task(WAVE_IDX);
+    task_report = task_create(userTask, UIDX, USER_PERIOD, USER_PERIOD, USER_PRIO);
+    printf("User Task! Report: %d\n", task_report);
+    wait_for_task(UIDX);
 
     allegro_exit();
     return 0;

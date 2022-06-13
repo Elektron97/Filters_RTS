@@ -15,6 +15,8 @@
 
 /*GLOBAL VARIABLES*/
 int end_flag = 0;
+int n_active_filters = 0;
+int n_active_signals = 0;
 
 /*FUNCTIONS*/
 double sign(double x)
@@ -27,7 +29,6 @@ double sign(double x)
         return 0.0;
 }
 
-//Low Pass Filter
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 {
     /************************************************
@@ -117,10 +118,10 @@ void printSignal(struct Signal signal)
         break;
     }
 
-
     printf("* Frequency:  \t %f [Hz]\n", signal.frequency);
     printf("* Amplitude: \t %f\n", signal.amplitude);
     printf("* Phase: \t %f [rad]\n", signal.phase);
+    printf("* Ts: \t %f [s]\n", signal.Ts);
     printf("***************************************\n");
 }
 
@@ -138,6 +139,32 @@ void init()
 	clear_to_color(screen, BLACK); //Black Background
 }
 
+void set_Ts(int idx)
+{
+    if(signals[idx].frequency != 0)
+    {
+        //fs = 100*f_signal | 100 samples for period
+        signals[idx].Ts = 1/(N_SAMPLE_PERIOD*signals[idx].frequency); 
+    }
+
+    else
+        signals[idx].Ts = 0;
+}
+
+void init_signal(int idx)
+{
+    /****************************************************
+     * INIT SIGNAL: Define initial parameter of signal. *
+     * Default signal: Sinusoidal Wave 1 Hz.            *
+     ****************************************************/
+    signals[idx].amplitude =    1.0;
+    signals[idx].frequency =    1.0;        //[Hz]
+    signals[idx].phase =        0.0;        //[rad]
+    signals[idx].signal_type =  sinusoid;
+
+    set_Ts(idx);
+}
+
 void keyboard_interp()
 {
     /********************************    
@@ -150,6 +177,33 @@ void keyboard_interp()
     //Interpreting keyboard
     switch(scan)
     {
+        /*CREATE A NEW SIGNAL*/
+        case KEY_ENTER:
+        if(n_active_signals < MAX_SIGNALS)
+        {
+            n_active_signals++;
+            task_create(filterTask, n_active_signals-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
+        }
+        else
+            printf("Numero massimo di segnali raggiunto.\n");
+
+        printf("[ENTER] Create a new signal.\n");
+        break;
+
+        case KEY_PLUS_PAD:
+        signals[n_active_signals-1].frequency += 5;
+        //Re-compute Sampling Period
+        set_Ts(n_active_signals-1);
+        //printSignal(signals[n_active_signals-1]);
+
+        //Clear and reprint
+
+        printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
+        break;
+
+        /*case KEY_MINUS_PAD:
+        break;*/
+
         /*EXIT CONDITION*/
         case KEY_ESC:
         end_flag = 1;
@@ -162,7 +216,7 @@ void keyboard_interp()
     }
 }
 
-void *helloWorldTask(void* arg)
+/*void *helloWorldTask(void* arg)
 {
     int idx;
 
@@ -180,16 +234,10 @@ void *helloWorldTask(void* arg)
     }
 
     return NULL;
-}
+}*/
 
-void *waveTask(void* arg)
+/*void *waveTask(void* arg)
 {
-    /***********************************TASK DESCRIPTION*************************
-     * Plot signals of 4 types: Sawtooth, Triangular, Sinusoid, Square.         *
-     * Time axis is rescaled in a range of [0, XLIM] (instead [0, WIDTH])       *
-     * Amplitude axis is rescaled in a range of [-1, 1] (instead [0, HEIGHT])   *    
-     ****************************************************************************/
-
     int idx = get_task_index(arg);
     set_activation(idx);
 
@@ -200,7 +248,7 @@ void *waveTask(void* arg)
 
     double y_filtered = 0.0;
 
-    struct Signal signal = {1.0, 30.0, 0.0, sinusoid};
+    struct Signal signal = {1.0, 30.0, 0.0, ,sinusoid};
 
     const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
 
@@ -217,18 +265,18 @@ void *waveTask(void* arg)
         //Filters algorithm needs y(k-1) and x(k-1)
         y_filtered = lowPassFilter(y_filtered, y, 2*PI*10, Ts);
 
-        /*COMPUTE SIGNAL*/
+        //COMPUTE SIGNAL
         time = k*Ts;
         y = signalRealization(signal, time);
 
-        /*DRAW POINTS*/
+        //DRAW POINTS
         plotPoint(time, y, YELLOW);
         plotPoint(time, y_filtered, WHITE);
 
         //Debug information
-        /*printf("******** Iteration %d **********\n", k);
-        printf("t = \t %f [s]\n", time);
-        printf("y = \t %f\n", y);*/
+        //printf("******** Iteration %d **********\n", k);
+        //printf("t = \t %f [s]\n", time);
+        //printf("y = \t %f\n", y);
 
         //Successive sample
         k++;
@@ -240,7 +288,7 @@ void *waveTask(void* arg)
     }
 
     return NULL;
-}
+}*/
 
 void *filterTask(void* arg)
 {
@@ -248,13 +296,37 @@ void *filterTask(void* arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
+    init_signal(idx);
+
+    //Local Variables
+    int k = 0;
+    double time = 0.0;
+    double y = 0.0;
+    //double y_filtered = 0.0;
+
     while(!end_flag)
     {
         /***********BODY OF TASK**********/
-        printf("Filter Task!\n");
+        /*COMPUTE SIGNAL*/
+        time = k*signals[idx].Ts;
+        y = signalRealization(signals[idx], time);
 
+        /*DRAW POINTS*/
+        plotPoint(time, y, YELLOW);
 
+        //Successive sample
+        k++;
+
+        //Replot Signal
+        if((WIDTH/XLIM)*time > WIDTH)
+        {
+            //Clear Screen
+	        clear_to_color(screen, BLACK); //Black Background
+            //Reset Local Variables
+            k = 0;
+        }
         /*********************************/
+
         if(deadline_miss(idx))
             printf("******Deadline Miss of Filter Task!******** \n");
 
@@ -295,10 +367,9 @@ void *userTask(void* arg)
     while(!end_flag)
     {
         /***********BODY OF TASK**********/
-        printf("User Task!\n");
-
-
+        keyboard_interp();
         /*********************************/
+
         if(deadline_miss(idx))
             printf("******Deadline Miss of User Task!******** \n");
 

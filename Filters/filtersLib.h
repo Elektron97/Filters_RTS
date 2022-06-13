@@ -89,6 +89,7 @@ struct Signal
     double amplitude;
     double frequency;   //[Hz]
     double phase;       //[rad]
+    double Ts;          //[s]
     enum Signal_Type signal_type;
 };
 
@@ -115,6 +116,8 @@ void printSignal(struct Signal signal);
 
 //Init
 void init();
+void set_Ts(int idx);
+void init_signal(int idx);
 
 //Keyboard Interpreter
 void keyboard_interp();
@@ -125,7 +128,7 @@ void *graphicTask(void* arg);
 void *userTask(void* arg);
 
 /*TEST TASKS*/
-void *helloWorldTask(void* arg);
-void *waveTask(void* arg);
+//void *helloWorldTask(void* arg);
+//void *waveTask(void* arg);
 
 #endif /* FILTERSLIB_H_ */
