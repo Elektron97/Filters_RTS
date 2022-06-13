@@ -138,6 +138,30 @@ void init()
 	clear_to_color(screen, BLACK); //Black Background
 }
 
+void keyboard_interp()
+{
+    /********************************    
+     * KEYBOARD INTERPRETER:        *
+     * Scan e interpret keyboard.   *
+     ********************************/
+
+    char scan = get_scancode(); //read from keyboard
+
+    //Interpreting keyboard
+    switch(scan)
+    {
+        /*EXIT CONDITION*/
+        case KEY_ESC:
+        end_flag = 1;
+        printf("[ESC] Exit from application...\n");
+        break;
+
+        /*DEFAULT CONDITION*/
+        default:
+        break;        
+    }
+}
+
 void *helloWorldTask(void* arg)
 {
     int idx;
@@ -186,6 +210,9 @@ void *waveTask(void* arg)
 
     while((!end_flag) && ((WIDTH/XLIM)*time <= WIDTH))
     {
+        keyboard_interp(); //Keyboard test
+
+
         //Test Filters
         //Filters algorithm needs y(k-1) and x(k-1)
         y_filtered = lowPassFilter(y_filtered, y, 2*PI*10, Ts);
@@ -210,6 +237,72 @@ void *waveTask(void* arg)
             printf("*****Deadline Miss of Wave Task!*******\n");
         
         wait_for_activation(idx);
+    }
+
+    return NULL;
+}
+
+void *filterTask(void* arg)
+{
+    int idx;
+    idx = get_task_index(arg);
+    set_activation(idx);
+
+    while(!end_flag)
+    {
+        /***********BODY OF TASK**********/
+        printf("Filter Task!\n");
+
+
+        /*********************************/
+        if(deadline_miss(idx))
+            printf("******Deadline Miss of Filter Task!******** \n");
+
+        wait_for_activation(idx);        
+    }
+
+    return NULL;
+}
+
+void *graphicTask(void* arg)
+{
+    int idx;
+    idx = get_task_index(arg);
+    set_activation(idx);
+
+    while(!end_flag)
+    {
+        /***********BODY OF TASK**********/
+        printf("Graphic Task!\n");
+
+
+        /*********************************/
+        if(deadline_miss(idx))
+            printf("******Deadline Miss of Graphic Task!******** \n");
+
+        wait_for_activation(idx);        
+    }
+
+    return NULL;
+}
+
+void *userTask(void* arg)
+{
+    int idx;
+    idx = get_task_index(arg);
+    set_activation(idx);
+
+    while(!end_flag)
+    {
+        /***********BODY OF TASK**********/
+        printf("User Task!\n");
+
+
+        /*********************************/
+        if(deadline_miss(idx))
+            printf("******Deadline Miss of User Task!******** \n");
+
+        wait_for_activation(idx);        
     }
 
     return NULL;
