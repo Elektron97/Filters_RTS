@@ -18,6 +18,10 @@ int end_flag = 0;
 int n_active_filters = 0;
 int n_active_signals = 0;
 
+/*SEMAPHORES: Mutex*/
+pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mux_filter = PTHREAD_MUTEX_INITIALIZER;
+
 /*FUNCTIONS*/
 double sign(double x)
 {
@@ -201,6 +205,7 @@ void keyboard_interp()
         printf("[ENTER] Create a new signal.\n");
         break;
 
+        /*INCREASE/DECREASE FREQUENCY*/
         case KEY_PLUS_PAD:
         if(signals[n_active_signals-1].frequency + 5 <= FREQ_MAX)
         {
@@ -370,6 +375,7 @@ void *filterTask(void* arg)
     while(!end_flag)
     {
         /***********BODY OF TASK**********/
+        //pthread_mutex_lock(&mux_signal);
         //Filters algorithm needs y(k-1) and x(k-1)
         y_filtered = lowPassFilter(y_filtered, y, 2*PI*signals[idx].frequency/3, signals[idx].Ts);
 
@@ -383,6 +389,7 @@ void *filterTask(void* arg)
 
         //Successive sample
         signals[idx].k++;
+        //pthread_mutex_unlock(&mux_signal);
 
         //Replot Signal when it reaches XLIM
         if((WIDTH/XLIM)*time > WIDTH)
