@@ -262,6 +262,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     int osc_height = osc->h;
 
     rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
+    line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);
+    textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);
 
     if(n_active_signals > 0)
     {
