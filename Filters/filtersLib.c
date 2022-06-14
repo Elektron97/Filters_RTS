@@ -264,6 +264,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
     line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);
+    textout_ex(osc, font, "0", 5, osc_height/2 + 5, LIGHT_GRAY, -1);
+    textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);
     textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);
 
     if(n_active_signals > 0)
@@ -490,6 +492,11 @@ void keyboard_interp()
         }
         pthread_mutex_unlock(&mux_signal);
         break;
+
+        //to do:
+        /*INCREASE/DECREASE AMPLITUDE*/
+
+        /*INCREASE/DECREASE PHASE*/
 
         /*CHANGE SIGNAL TYPE*/
         //Sinusoidal
