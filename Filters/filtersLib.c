@@ -66,13 +66,13 @@ double highPassFilter()
     return 0.0;
 }
 
-void plotPoint(double time, double y, int color)
+void plotPoint(BITMAP* window, double time, double y, int color)
 {
     //scaled_time = (WIDTH/XLIM)*time;
     //scaled_y = (HEIGHT/2) + (HEIGHT/2 - 1)*y;
 
     //Rescale & Plot
-    putpixel(screen, (WIDTH/XLIM)*time, (HEIGHT/2) + (HEIGHT/2 - 1)*y, color);
+    putpixel(window, (WIDTH/XLIM)*time, (HEIGHT/2) + (HEIGHT/2 - 1)*y, color);
 }
 
 void signalRealization(int idx)
@@ -240,7 +240,6 @@ void init_filter(int idx)
 
 void clear_reset(int idx)
 {
-    pthread_mutex_lock(&mux_signal);
     //Clear Screen
     clear_to_color(screen, BLACK); //Black Background
     //Reset Plot
@@ -248,7 +247,6 @@ void clear_reset(int idx)
     signals[idx].t = 0.0;
     signals[idx].y = 0.0;
     filters[idx].y_filterd = 0.0;
-    pthread_mutex_unlock(&mux_signal);
 }
 
 void keyboard_interp()
@@ -278,6 +276,7 @@ void keyboard_interp()
 
         /*INCREASE/DECREASE FREQUENCY*/
         case KEY_PLUS_PAD:
+        pthread_mutex_lock(&mux_signal);
         if(signals[n_active_signals-1].frequency + 5 <= FREQ_MAX)
         {
             signals[n_active_signals-1].frequency += 5;
@@ -313,9 +312,11 @@ void keyboard_interp()
             }
                 
         }
+        pthread_mutex_unlock(&mux_signal);
         break;
 
         case KEY_MINUS_PAD:
+        pthread_mutex_lock(&mux_signal);
         if(signals[n_active_signals-1].frequency - 5 >= FREQ_MIN)
         {
             signals[n_active_signals-1].frequency -= 5;
@@ -351,6 +352,7 @@ void keyboard_interp()
             }
                 
         }
+        pthread_mutex_unlock(&mux_signal);
         break;
 
         /*EXIT CONDITION*/
@@ -395,12 +397,11 @@ void *filterTask(void* arg)
         //Successive sample
         signals[idx].k++;
         
-        pthread_mutex_unlock(&mux_signal);
-
         //Replot Signal when it reaches XLIM
         if((WIDTH/XLIM)*signals[idx].t > WIDTH)
             clear_reset(idx);
         /*********************************/
+        pthread_mutex_unlock(&mux_signal);
 
         if(deadline_miss(idx))
             printf("******Deadline Miss of Filter Task!******** \n");
@@ -421,8 +422,8 @@ void *graphicTask(void* arg)
     {
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
-        plotPoint(signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
-        plotPoint(signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
+        plotPoint(screen, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
+        plotPoint(screen, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 

@@ -122,7 +122,7 @@ struct Filter filters[MAX_FILTERS];
 double sign(double x);
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter();
-void plotPoint(double time, double y, int color);
+void plotPoint(BITMAP* window, double time, double y, int color);
 void signalRealization(int idx);
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
@@ -141,9 +141,5 @@ void keyboard_interp();
 void *filterTask(void* arg);
 void *graphicTask(void* arg);
 void *userTask(void* arg);
-
-/*TEST TASKS*/
-//void *helloWorldTask(void* arg);
-//void *waveTask(void* arg);
 
 #endif /* FILTERSLIB_H_ */
