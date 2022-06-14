@@ -53,7 +53,7 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 	return y_k;
 }
 
-double highPassFilter()
+double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts)
 {
     /************************************************
      *  HIGH PASS FILTER:                           *
@@ -66,7 +66,8 @@ double highPassFilter()
      * a = omega_cut = 2*PI*f_cut                   *
      ************************************************/
 
-    return 0.0;
+    double p = exp(-a*Ts);
+    return (x_k - x_k_1) + p*y_k_1;
 }
 
 void plotPoint(BITMAP* window, double time, double y, int color)
@@ -286,7 +287,21 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
 void draw_information(BITMAP* window)
 {
-    textout_centre_ex(window, font, "FILTER TASK!", 500, 40, WHITE, -1);
+    //String to print
+    char s_freq[100];
+    char s_phase[100];
+    //char[100] s_type;
+
+    sprintf(s_freq, "Frequency: %5.2f Hz", signals[n_active_signals-1].frequency);
+    sprintf(s_phase, "Phase: %5.2f rad", signals[n_active_signals-1].phase);
+    //sprintf(s_type, "Frequency: \t %f Hz", signals[n_active_signals-1].frequency);
+
+    textout_centre_ex(window, font, "FILTER TASK!", 500, 30, WHITE, -1);
+    textout_ex(window, font, "Signal Information:", 850, 10, YELLOW, -1);
+
+    textout_ex(window, font, s_freq, 850, 20, WHITE, -1);
+    textout_ex(window, font, s_phase, 850, 30, WHITE, -1);
+    //textout_ex(window, font, s_type, 850, 40, WHITE, -1);
 }
 
 void keyboard_interp()

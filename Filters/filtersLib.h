@@ -113,7 +113,7 @@ struct Filter filters[MAX_FILTERS];
 //Functions
 double sign(double x);
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
-double highPassFilter();
+double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
 void signalRealization(int idx);
 void printSignal(struct Signal signal);
