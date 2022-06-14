@@ -288,20 +288,24 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 void draw_information(BITMAP* window)
 {
     //String to print
-    char s_freq[100];
-    char s_phase[100];
+    //char s_freq[100];
+    //char s_phase[100];
     //char[100] s_type;
 
-    sprintf(s_freq, "Frequency: %5.2f Hz", signals[n_active_signals-1].frequency);
-    sprintf(s_phase, "Phase: %5.2f rad", signals[n_active_signals-1].phase);
+    //sprintf(s_freq, "Frequency: %5.2f Hz", signals[n_active_signals-1].frequency);
+    //sprintf(s_phase, "Phase: %5.2f rad", signals[n_active_signals-1].phase);
     //sprintf(s_type, "Frequency: \t %f Hz", signals[n_active_signals-1].frequency);
 
     textout_centre_ex(window, font, "FILTER TASK!", 500, 30, WHITE, -1);
     textout_ex(window, font, "Signal Information:", 850, 10, YELLOW, -1);
 
-    textout_ex(window, font, s_freq, 850, 20, WHITE, -1);
-    textout_ex(window, font, s_phase, 850, 30, WHITE, -1);
+    //textout_ex(window, font, s_freq, 850, 20, WHITE, -1);
+    //textout_ex(window, font, s_phase, 850, 30, WHITE, -1);
     //textout_ex(window, font, s_type, 850, 40, WHITE, -1);
+
+    textout_ex(window, font, "Frequency: [Hz]", 850, 20, WHITE, -1);
+    textout_ex(window, font, "Phase: [rad]", 850, 30, WHITE, -1);
+    textout_ex(window, font, "Signal Type:", 850, 40, WHITE, -1);
 }
 
 void keyboard_interp()
@@ -491,7 +495,7 @@ void *graphicTask(void* arg)
         pthread_mutex_unlock(&mux_signal);
 
         if(deadline_miss(idx))
-            printf("******Deadline Miss of Graphic Task!******** \n");
+            printf("******Deadline Miss of Graphic Task!********\n");
 
         wait_for_activation(idx);        
     }
