@@ -33,8 +33,8 @@
 #define N_SAMPLE_PERIOD 100 //n samples in a period
 
 /*Graphics Parameters*/
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 1024
+#define HEIGHT 768
 
 //axis limit
 #define XLIM 1.0
@@ -73,14 +73,6 @@ enum Filter_Type
     BAND_PASS,
     BAND_STOP
 };
-
-//To do
-/*enum Discretization_Tech
-{
-    FORWARD_EULER,
-    BACKWARD_EULER,
-    ZETA
-};*/
 
 /*STRUCTURES*/
 struct Signal
@@ -133,6 +125,8 @@ void set_Ts(int idx);
 void init_signal(int idx);
 void init_filter(int idx);
 void clear_reset(BITMAP* window, int idx);
+void draw_oscilloscope(BITMAP* osc, BITMAP* window);
+void draw_information(BITMAP* window);
 
 //Keyboard Interpreter
 void keyboard_interp();

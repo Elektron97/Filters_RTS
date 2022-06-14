@@ -255,6 +255,38 @@ void clear_reset(BITMAP* window, int idx)
     filters[idx].y_filterd = 0.0;
 }
 
+void draw_oscilloscope(BITMAP* osc, BITMAP* window)
+{
+    //Extract dimension of plot
+    int osc_width = osc->w;
+    int osc_height = osc->h;
+
+    rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
+
+    if(n_active_signals > 0)
+    {
+        plotPoint(osc, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
+        plotPoint(osc, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
+    }
+
+    //Replot Signal when it reaches XLIM OR If there is a clear request
+    if(((osc_width/XLIM)*signals[n_active_signals-1].t > osc_width) || clear_request)
+    {
+        clear_reset(osc, n_active_signals-1);
+        
+        if(clear_request)
+            clear_request = 0;
+    }
+
+    //To do: hard code "68"
+    blit(osc, window, 0, 0, 0, 68, osc_width, osc_height); //finally, copies in original screen
+}
+
+void draw_information(BITMAP* window)
+{
+    textout_centre_ex(window, font, "FILTER TASK!", 500, 40, WHITE, -1);
+}
+
 void keyboard_interp()
 {
     /********************************    
@@ -424,26 +456,18 @@ void *graphicTask(void* arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
-    BITMAP *screen_copy; //This copy is necessary to avoid blinking
+    BITMAP *screen_copy;    //This copy is necessary to avoid blinking
+    BITMAP *osc;            //Plot
     screen_copy = create_bitmap(WIDTH, HEIGHT);
+    osc = create_bitmap(WIDTH, HEIGHT-68);
     clear_to_color(screen_copy, BLACK);
 
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
-        if(n_active_signals > 0)
-        {
-            plotPoint(screen_copy, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
-            plotPoint(screen_copy, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
-        }
-
-        //Replot Signal when it reaches XLIM OR If there is a clear request
-        if(((WIDTH/XLIM)*signals[n_active_signals-1].t > WIDTH) || clear_request)
-        {
-            clear_reset(screen_copy, n_active_signals-1);
-            clear_request = 0;
-        }
+        draw_information(screen_copy);
+        draw_oscilloscope(osc, screen_copy);
 
         blit(screen_copy, screen, 0, 0, 0, 0, WIDTH, HEIGHT); //finally, copies in original screen
         /*********************************/
