@@ -11,6 +11,9 @@
 #define FREQ_MIN 0          // Constant Signal
 #define FREQ_MAX 100        // 100 Hz
 
+//n-order filter
+#define MAX_ORDER 1         //First Order (actually) 
+
 /*Task Parameters*/
 //Index
 #define GIDX (MAX_SIGNALS + 1) //Graphic Task
@@ -35,6 +38,15 @@
 /*Graphics Parameters*/
 #define WIDTH 1024
 #define HEIGHT 768
+
+//Title
+#define TITLE_WIDTH 50
+#define TITLE_HEIGHT 30
+
+//Information Tab height
+#define INFO_HEIGHT 68
+#define INFO_SIGNAL_WIDTH 500
+#define INFO_FILTER_WIDTH (INFO_SIGNAL_WIDTH + 200)
 
 //axis limit
 #define XLIM 1.0
@@ -90,6 +102,7 @@ struct Signal
     //Graphic Attribute
     double t;           //[s]
     double y;
+    //double y[MAX_ORDER + 1]; TO DO
     int    color;
 };
 
@@ -102,6 +115,7 @@ struct Filter
 
     //Graphic Attribute
     double y_filterd;
+    //double y_filterd[MAX_ORDER + 1]; TO DO
     int color;
 };
 
@@ -126,7 +140,7 @@ void init_signal(int idx);
 void init_filter(int idx);
 void clear_reset(BITMAP* window, int idx);
 void draw_oscilloscope(BITMAP* osc, BITMAP* window);
-void draw_information(BITMAP* window);
+void draw_information(BITMAP* info, BITMAP* window);
 
 //Keyboard Interpreter
 void keyboard_interp();

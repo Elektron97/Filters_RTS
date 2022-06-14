@@ -281,31 +281,104 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
             clear_request = 0;
     }
 
-    //To do: hard code "68"
-    blit(osc, window, 0, 0, 0, 68, osc_width, osc_height); //finally, copies in original screen
+    blit(osc, window, 0, 0, 0, INFO_HEIGHT, osc_width, osc_height); //finally, copies in original screen
 }
 
-void draw_information(BITMAP* window)
+void draw_information(BITMAP* info, BITMAP* window)
 {
     //String to print
-    //char s_freq[100];
-    //char s_phase[100];
-    //char[100] s_type;
+    char s_freq[100];
+    char s_phase[100];
+    char s_amp[100];
 
-    //sprintf(s_freq, "Frequency: %5.2f Hz", signals[n_active_signals-1].frequency);
-    //sprintf(s_phase, "Phase: %5.2f rad", signals[n_active_signals-1].phase);
-    //sprintf(s_type, "Frequency: \t %f Hz", signals[n_active_signals-1].frequency);
+    char s_fcut[100];
+    char s_gain[100];
+    char s_Ts[100];
 
-    textout_centre_ex(window, font, "FILTER TASK!", 500, 30, WHITE, -1);
-    textout_ex(window, font, "Signal Information:", 850, 10, YELLOW, -1);
+    sprintf(s_freq, "Frequency: %5.2f [Hz]", signals[n_active_signals-1].frequency);
+    sprintf(s_phase, "Phase: %5.2f [rad]", signals[n_active_signals-1].phase);
+    sprintf(s_amp, "Amplitude: %5.2f", signals[n_active_signals-1].amplitude);
 
-    //textout_ex(window, font, s_freq, 850, 20, WHITE, -1);
-    //textout_ex(window, font, s_phase, 850, 30, WHITE, -1);
-    //textout_ex(window, font, s_type, 850, 40, WHITE, -1);
+    sprintf(s_fcut, "Cut Frequency: %5.2f [Hz]", filters[n_active_signals-1].f_cut);
+    sprintf(s_gain, "Gain: %5.2f", filters[n_active_signals-1].gain);
+    sprintf(s_Ts, "Sampling Period: %5.2f [ms]", signals[n_active_signals-1].Ts*1000.0);
 
-    textout_ex(window, font, "Frequency: [Hz]", 850, 20, WHITE, -1);
-    textout_ex(window, font, "Phase: [rad]", 850, 30, WHITE, -1);
-    textout_ex(window, font, "Signal Type:", 850, 40, WHITE, -1);
+    //A bit not-optimized, sorry future Daniele
+    clear_to_color(info, BLACK);
+
+    //Title
+    textout_centre_ex(info, font, "FILTER TASK!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
+
+    //Signal Information
+    textout_ex(info, font, "Signal Information:", INFO_SIGNAL_WIDTH, 10, YELLOW, -1);
+    textout_ex(info, font, s_freq, INFO_SIGNAL_WIDTH, 20, WHITE, -1);
+    textout_ex(info, font, s_phase, INFO_SIGNAL_WIDTH, 30, WHITE, -1);
+    textout_ex(info, font, s_amp, INFO_SIGNAL_WIDTH, 40, WHITE, -1);
+
+    if(n_active_signals == 0)
+        textout_ex(info, font, "Signal Type: Unkown", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+    else
+    {
+        switch(signals[n_active_signals-1].signal_type)
+        {
+            case sinusoid:
+            textout_ex(info, font, "Signal Type: Sinusoid", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+            break;
+
+            case square:
+            textout_ex(info, font, "Signal Type: Square", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+            break;
+
+            case sawtooth:
+            textout_ex(info, font, "Signal Type: Sawtooth", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+            break;
+
+            case triang:
+            textout_ex(info, font, "Signal Type: Triangular", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+            break;
+
+            default:
+            textout_ex(info, font, "Signal Type: Unkown", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
+            break;
+        }
+    }
+    
+    //Filter Information
+    textout_ex(info, font, "Filter Information:", INFO_FILTER_WIDTH, 10, CYAN, -1);
+    textout_ex(info, font, s_fcut, INFO_FILTER_WIDTH, 20, WHITE, -1);
+    textout_ex(info, font, s_gain, INFO_FILTER_WIDTH, 30, WHITE, -1);
+    textout_ex(info, font, s_Ts, INFO_FILTER_WIDTH, 40, WHITE, -1);
+
+    if(n_active_signals == 0)
+        textout_ex(info, font, "Filter Type: Unkown", INFO_FILTER_WIDTH, 50, WHITE, -1);
+
+    else
+    {
+        switch(filters[n_active_signals-1].filter_type)
+        {
+            case LOW_PASS:
+            textout_ex(info, font, "Filter Type: Low Pass", INFO_FILTER_WIDTH, 50, WHITE, -1);
+            break;
+
+            case HIGH_PASS:
+            textout_ex(info, font, "Filter Type: High Pass", INFO_FILTER_WIDTH, 50, WHITE, -1);
+            break;
+
+            case BAND_PASS:
+            textout_ex(info, font, "Filter Type: Band Pass", INFO_FILTER_WIDTH, 50, WHITE, -1);
+            break;
+
+            case BAND_STOP:
+            textout_ex(info, font, "Filter Type: Band Stop", INFO_FILTER_WIDTH, 50, WHITE, -1);
+            break;
+
+            default:
+            textout_ex(info, font, "Filter Type: Unkown", INFO_FILTER_WIDTH, 50, WHITE, -1);
+            break;
+        }
+    }
+
+    blit(info, window, 0, 0, 0, 0, info->w, info->h); //finally, copies in original screen
 }
 
 void keyboard_interp()
@@ -418,6 +491,61 @@ void keyboard_interp()
         pthread_mutex_unlock(&mux_signal);
         break;
 
+        /*CHANGE SIGNAL TYPE*/
+        //Sinusoidal
+        case KEY_1:
+        printf("[1] Change signal type in Sinusoidal.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signals[n_active_signals-1].signal_type != sinusoid)
+        {
+            signals[n_active_signals-1].signal_type = sinusoid;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        //Square
+        case KEY_2:
+        printf("[2] Change signal type in Square.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signals[n_active_signals-1].signal_type != square)
+        {
+            signals[n_active_signals-1].signal_type = square;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        //Sawtooth
+        case KEY_3:
+        printf("[3] Change signal type in Sawtooth.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signals[n_active_signals-1].signal_type != sawtooth)
+        {
+            signals[n_active_signals-1].signal_type = sawtooth;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        //Triangular
+        case KEY_4:
+        printf("[4] Change signal type in Triangular.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signals[n_active_signals-1].signal_type != triang)
+        {
+            signals[n_active_signals-1].signal_type = triang;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;        
+
+        /*CLEAR REQUEST*/
+        case KEY_C:
+        clear_request = 1;
+        printf("[C] Clear plot.\n");
+        break;
+
         /*EXIT CONDITION*/
         case KEY_ESC:
         end_flag = 1;
@@ -479,15 +607,17 @@ void *graphicTask(void* arg)
 
     BITMAP *screen_copy;    //This copy is necessary to avoid blinking
     BITMAP *osc;            //Plot
+    BITMAP *information;    //Information
     screen_copy = create_bitmap(WIDTH, HEIGHT);
-    osc = create_bitmap(WIDTH, HEIGHT-68);
+    osc = create_bitmap(WIDTH, HEIGHT-INFO_HEIGHT);
+    information = create_bitmap(WIDTH, INFO_HEIGHT);
     clear_to_color(screen_copy, BLACK);
 
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
-        draw_information(screen_copy);
+        draw_information(information, screen_copy);
         draw_oscilloscope(osc, screen_copy);
 
         blit(screen_copy, screen, 0, 0, 0, 0, WIDTH, HEIGHT); //finally, copies in original screen
