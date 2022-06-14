@@ -46,3 +46,7 @@ int main(void)
     return 0;
 }
 ```
+
+https://rosettacode.org/wiki/Fast_Fourier_transform#C
+
+https://www.codeproject.com/Articles/9388/How-to-implement-the-FFT-algorithm
