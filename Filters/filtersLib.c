@@ -71,8 +71,11 @@ void plotPoint(BITMAP* window, double time, double y, int color)
     //scaled_time = (WIDTH/XLIM)*time;
     //scaled_y = (HEIGHT/2) + (HEIGHT/2 - 1)*y;
 
+    int width = window->w;
+    int height = window->h;
+
     //Rescale & Plot
-    putpixel(window, (WIDTH/XLIM)*time, (HEIGHT/2) + (HEIGHT/2 - 1)*y, color);
+    putpixel(window, (width/XLIM)*time, (height/2) + (height/2 - 1)*y, color);
 }
 
 void signalRealization(int idx)
@@ -422,8 +425,12 @@ void *graphicTask(void* arg)
     {
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
-        plotPoint(screen, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
-        plotPoint(screen, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
+        if(n_active_signals > 0)
+        {
+            plotPoint(screen, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
+            plotPoint(screen, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
+        }
+
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
