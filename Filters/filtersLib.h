@@ -18,7 +18,7 @@
 
 //Period
 #define FILTER_PERIOD   10     //[ms]
-#define GRAPHIC_PERIOD  20     //[ms]
+#define GRAPHIC_PERIOD  10     //[ms]
 #define USER_PERIOD     30     //[ms]
 
 //Priority  | 1 (low) - 99 (high)
@@ -85,40 +85,52 @@ enum Filter_Type
 /*STRUCTURES*/
 struct Signal
 {
+    //General Attributes of Signal
     double amplitude;
     double frequency;   //[Hz]
     double phase;       //[rad]
+    enum Signal_Type signal_type;
+
+    //Discrete Time Parameter
     double Ts;          //[s]
     int    k;           //k-th sample
+
+    //Graphic Attribute
+    double t;           //[s]
+    double y;
     int    color;
-    enum Signal_Type signal_type;
 };
 
 struct Filter
 {
-    double freq_low;    //[Hz]
-    double freq_high;   //[Hz]
+    //General Attributes of Filter
+    double f_cut;   //[Hz]
     double gain;
     enum Filter_Type filter_type;
+
+    //Graphic Attribute
+    double y_filterd;
+    int color;
 };
 
 /*Global Resources*/
 struct Signal signals[MAX_SIGNALS];
 struct Filter filters[MAX_FILTERS];
 
-
 /*FUNCTION SIGNATURES*/
 //Functions
 double sign(double x);
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
+double highPassFilter();
 void plotPoint(double time, double y, int color);
-double signalRealization(struct Signal signal, double time);
+void signalRealization(int idx);
 void printSignal(struct Signal signal);
 
 //Init
 void init();
 void set_Ts(int idx);
 void init_signal(int idx);
+void init_filter(int idx);
 void clear_reset(int idx);
 
 //Keyboard Interpreter

@@ -20,7 +20,7 @@ int n_active_signals = 0;
 
 /*SEMAPHORES: Mutex*/
 pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mux_filter = PTHREAD_MUTEX_INITIALIZER;
+//pthread_mutex_t mux_filter = PTHREAD_MUTEX_INITIALIZER;
 
 /*FUNCTIONS*/
 double sign(double x)
@@ -48,8 +48,23 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
 
 	double p = exp(-a*Ts);
 	double y_k = p*y_k_1 + (1-p)*x_k_1;
-
 	return y_k;
+}
+
+double highPassFilter()
+{
+    /************************************************
+     *  HIGH PASS FILTER:                           *
+     * This function compute the discrete time form *
+     * of transfer function G(s):                   *
+     *              s                               *
+     * G(s) =  -----------                          *
+     *          s   +   a                           *      
+     *                                              *    
+     * a = omega_cut = 2*PI*f_cut                   *
+     ************************************************/
+
+    return 0.0;
 }
 
 void plotPoint(double time, double y, int color)
@@ -61,38 +76,37 @@ void plotPoint(double time, double y, int color)
     putpixel(screen, (WIDTH/XLIM)*time, (HEIGHT/2) + (HEIGHT/2 - 1)*y, color);
 }
 
-double signalRealization(struct Signal signal, double time)
+void signalRealization(int idx)
 {
-    double y;
-
-    switch(signal.signal_type)
+    signals[idx].t = signals[idx].k*signals[idx].Ts;
+    // Update signal output
+    switch(signals[idx].signal_type)
     {
         case sinusoid:
         // y(k) = A sin(wt + phi)
-        y = signal.amplitude*sin(2*PI*signal.frequency*time + signal.phase);
+        signals[idx].y = signals[idx].amplitude*sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase);
         break;
 
         case square:
         // y(k) = A sgn(sin(wt + phi))
-        y = signal.amplitude*sign(sin(2*PI*signal.frequency*time + signal.phase));
+        signals[idx].y = signals[idx].amplitude*sign(sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase));
         break;
 
         case sawtooth:
-        //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*time + signal.phase)));
-        y = (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*time + signal.phase)));
+        //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*signal.t + signal.phase)));
+        signals[idx].y = (2*signals[idx].amplitude/PI) * atan(1/(tan(PI*signals[idx].frequency*signals[idx].t + signals[idx].phase)));
         break;
 
         case triang:
-        y = (2*signal.amplitude/PI) * asin(sin(2*PI*signal.frequency*time + signal.phase));
+        signals[idx].y = (2*signals[idx].amplitude/PI) * asin(sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase));
         break;
 
         default:
-        y = 0.0;
+        signals[idx].y = 0.0;
         printf("Singal Type not valid. Output setted to zero!\n");
         break;
     }
 
-    return y;
 }
 
 void printSignal(struct Signal signal)
@@ -154,7 +168,7 @@ void set_Ts(int idx)
     }
 
     else
-        signals[idx].Ts = 0;
+        signals[idx].Ts = 0.01;
 }
 
 void init_signal(int idx)
@@ -162,22 +176,45 @@ void init_signal(int idx)
     /****************************************************
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
+    //Init general attributes
     signals[idx].amplitude =    frand(0.1, 1.0);
     signals[idx].frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
     signals[idx].phase =        frand(0, 2*PI);             //[rad]
-    signals[idx].k =            0;
     signals[idx].signal_type =  floor(frand(sinusoid, triang));
-    signals[idx].color =        floor(frand(WHITE, BLACK));
 
+    //Init discrete time parameters
+    signals[idx].k = 0;
     set_Ts(idx);
+
+    //Graphic Parameters
+    signals[idx].t = 0.0;
+    signals[idx].y = 0.0;
+    signals[idx].color = floor(frand(WHITE, BLACK));
+}
+
+void init_filter(int idx)
+{
+    /****************************************************
+     * INIT FILTER: Define initial parameter of filter. *
+     ****************************************************/
+    //Init general attributes
+    filters[idx].gain = 1.0;
+    filters[idx].f_cut = (1.0/3.0)*signals[idx].frequency;  //[Hz]
+    filters[idx].filter_type = LOW_PASS;
+
+    //Graphic Parameters
+    filters[idx].y_filterd = 0.0;
+    filters[idx].color = floor(frand(WHITE, BLACK));
 }
 
 void clear_reset(int idx)
 {
+    pthread_mutex_lock(&mux_signal);
     //Clear Screen
     clear_to_color(screen, BLACK); //Black Background
     //Reset Plot
     signals[idx].k = 0;
+    pthread_mutex_unlock(&mux_signal);
 }
 
 void keyboard_interp()
@@ -276,6 +313,11 @@ void keyboard_interp()
         printf("[ESC] Exit from application...\n");
         break;
 
+        case KEY_SPACE:
+        end_flag = 1;
+        printf("[SPACE] Exit from application...\n");
+        break;
+
         /*DEFAULT CONDITION*/
         default:
         break;        
@@ -363,44 +405,34 @@ void *filterTask(void* arg)
     set_activation(idx);
 
     init_signal(idx);
+    init_filter(idx);
     printSignal(signals[idx]);
-
-    //Local Variables
-    double time = 0.0;
-    double y = 0.0;
-    double y_filtered = 0.0;
-
-    int filter_color = floor(frand(WHITE, BLACK));
 
     while(!end_flag)
     {
+        pthread_mutex_lock(&mux_signal);
+
         /***********BODY OF TASK**********/
-        //pthread_mutex_lock(&mux_signal);
         //Filters algorithm needs y(k-1) and x(k-1)
-        y_filtered = lowPassFilter(y_filtered, y, 2*PI*signals[idx].frequency/3, signals[idx].Ts);
+        filters[idx].y_filterd = lowPassFilter(filters[idx].y_filterd, signals[idx].y, 2.0*PI*(filters[idx].f_cut), signals[idx].Ts);
 
         /*COMPUTE SIGNAL*/
-        time = signals[idx].k*signals[idx].Ts;
-        y = signalRealization(signals[idx], time);
-
-        /*DRAW POINTS*/
-        plotPoint(time, y, signals[idx].color);
-        plotPoint(time, y_filtered, filter_color);
+        signalRealization(idx);
 
         //Successive sample
         signals[idx].k++;
-        //pthread_mutex_unlock(&mux_signal);
+        
+        pthread_mutex_unlock(&mux_signal);
 
         //Replot Signal when it reaches XLIM
-        if((WIDTH/XLIM)*time > WIDTH)
+        if((WIDTH/XLIM)*signals[idx].t > WIDTH)
             clear_reset(idx);
-        
         /*********************************/
 
         if(deadline_miss(idx))
             printf("******Deadline Miss of Filter Task!******** \n");
 
-        wait_for_activation(idx);        
+        wait_for_activation(idx);      
     }
 
     return NULL;
@@ -414,11 +446,13 @@ void *graphicTask(void* arg)
 
     while(!end_flag)
     {
+        pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
-        printf("Graphic Task!\n");
-
-
+        plotPoint(signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
+        plotPoint(signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
         /*********************************/
+        pthread_mutex_unlock(&mux_signal);
+
         if(deadline_miss(idx))
             printf("******Deadline Miss of Graphic Task!******** \n");
 

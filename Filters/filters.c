@@ -22,10 +22,14 @@ int main(void)
 {
     init();
 
-    int task_report; // 0: Ok | 1: Task Issues
-    task_report = task_create(userTask, UIDX, USER_PERIOD, USER_PERIOD, USER_PRIO);
-    printf("User Task! Report: %d\n", task_report);
+    int user_report, graphic_report; // 0: Ok | 1: Task Issues
+
+    user_report = task_create(userTask, UIDX, USER_PERIOD, USER_PERIOD, USER_PRIO);
+    printf("User Task! Report: %d\n", user_report);
+    graphic_report = task_create(graphicTask, GIDX, GRAPHIC_PERIOD, GRAPHIC_PERIOD, GRAPHIC_PRIO);
+    printf("Graphic Task! Report: %d\n", graphic_report);
     wait_for_task(UIDX);
+    wait_for_task(GIDX);
 
     allegro_exit();
     return 0;
