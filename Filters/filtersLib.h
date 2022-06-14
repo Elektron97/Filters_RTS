@@ -125,6 +125,7 @@ double highPassFilter();
 void plotPoint(double time, double y, int color);
 void signalRealization(int idx);
 void printSignal(struct Signal signal);
+void printFilter(struct Filter filter);
 
 //Init
 void init();

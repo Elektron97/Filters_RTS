@@ -15,12 +15,11 @@
 
 /*GLOBAL VARIABLES*/
 int end_flag = 0;
-int n_active_filters = 0;
+//int n_active_filters = 0;
 int n_active_signals = 0;
 
 /*SEMAPHORES: Mutex*/
 pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
-//pthread_mutex_t mux_filter = PTHREAD_MUTEX_INITIALIZER;
 
 /*FUNCTIONS*/
 double sign(double x)
@@ -143,6 +142,38 @@ void printSignal(struct Signal signal)
     printf("***************************************\n");
 }
 
+void printFilter(struct Filter filter)
+{
+    printf("********PLOT SIGNAL INFORMATION********\n");
+
+    switch(filter.filter_type)
+    {
+        case LOW_PASS:
+        printf("* Filter Type: \t Low Pass\n");
+        break;
+
+        case HIGH_PASS:
+        printf("* Filter Type: \t High Pass\n");
+        break;
+
+        case BAND_PASS:
+        printf("* Filter Type: \t Band Pass\n");
+        break;
+
+        case BAND_STOP:
+        printf("* Filter Type: \t Band Stop\n");
+        break;
+
+        default:
+        printf("* Filter Type not valid.\n");
+        break;
+    }
+
+    printf("* Cut Freq:  \t %f [Hz]\n", filter.f_cut);
+    printf("* Gain: \t %f\n", filter.gain);
+    printf("***************************************\n");
+}
+
 void init()
 {
     allegro_init();
@@ -213,7 +244,10 @@ void clear_reset(int idx)
     //Clear Screen
     clear_to_color(screen, BLACK); //Black Background
     //Reset Plot
-    signals[idx].k = 0;
+    signals[idx].k = 0.0;
+    signals[idx].t = 0.0;
+    signals[idx].y = 0.0;
+    filters[idx].y_filterd = 0.0;
     pthread_mutex_unlock(&mux_signal);
 }
 
@@ -250,6 +284,9 @@ void keyboard_interp()
             //Re-compute Sampling Period
             set_Ts(n_active_signals-1);
             printSignal(signals[n_active_signals-1]);
+            //Re-compute Cut Frequency
+            filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
+            printFilter(filters[n_active_signals-1]);
 
             //Clear and reprint
             clear_reset(n_active_signals-1);
@@ -267,6 +304,9 @@ void keyboard_interp()
                 //Re-compute Sampling Period
                 set_Ts(n_active_signals-1);
                 printSignal(signals[n_active_signals-1]);
+                //Re-compute Cut Frequency
+                filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
+                printFilter(filters[n_active_signals-1]);
 
                 //Clear and reprint
                 clear_reset(n_active_signals-1);
@@ -282,6 +322,9 @@ void keyboard_interp()
             //Re-compute Sampling Period
             set_Ts(n_active_signals-1);
             printSignal(signals[n_active_signals-1]);
+            //Re-compute Cut Frequency
+            filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
+            printFilter(filters[n_active_signals-1]);
 
             //Clear and reprint
             clear_reset(n_active_signals-1);
@@ -299,6 +342,9 @@ void keyboard_interp()
                 //Re-compute Sampling Period
                 set_Ts(n_active_signals-1);
                 printSignal(signals[n_active_signals-1]);
+                //Re-compute Cut Frequency
+                filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
+                printFilter(filters[n_active_signals-1]);
 
                 //Clear and reprint
                 clear_reset(n_active_signals-1);
@@ -324,80 +370,6 @@ void keyboard_interp()
     }
 }
 
-/*void *helloWorldTask(void* arg)
-{
-    int idx;
-
-    idx = get_task_index(arg);
-    set_activation(idx);
-
-    while(!end_flag)
-    {
-        printf("Hello World! \n");
-        
-        if(deadline_miss(idx))
-            printf("******Deadline Miss!******** \n");
-
-        wait_for_activation(idx);
-    }
-
-    return NULL;
-}*/
-
-/*void *waveTask(void* arg)
-{
-    int idx = get_task_index(arg);
-    set_activation(idx);
-
-    //Init
-    int k = 0;
-    double time = 0.0;
-    double y = 0.0;
-
-    double y_filtered = 0.0;
-
-    struct Signal signal = {1.0, 30.0, 0.0, ,sinusoid};
-
-    const double Ts = 1/(N_SAMPLE_PERIOD*signal.frequency); //fs = 100*f_signal | 100 samples for period
-
-    //Print Information
-    printf("Wave Task Period: %d\n", WAVE_PER);
-    printSignal(signal);
-
-    while((!end_flag) && ((WIDTH/XLIM)*time <= WIDTH))
-    {
-        keyboard_interp(); //Keyboard test
-
-
-        //Test Filters
-        //Filters algorithm needs y(k-1) and x(k-1)
-        y_filtered = lowPassFilter(y_filtered, y, 2*PI*10, Ts);
-
-        //COMPUTE SIGNAL
-        time = k*Ts;
-        y = signalRealization(signal, time);
-
-        //DRAW POINTS
-        plotPoint(time, y, YELLOW);
-        plotPoint(time, y_filtered, WHITE);
-
-        //Debug information
-        //printf("******** Iteration %d **********\n", k);
-        //printf("t = \t %f [s]\n", time);
-        //printf("y = \t %f\n", y);
-
-        //Successive sample
-        k++;
-
-        if(deadline_miss(idx))
-            printf("*****Deadline Miss of Wave Task!*******\n");
-        
-        wait_for_activation(idx);
-    }
-
-    return NULL;
-}*/
-
 void *filterTask(void* arg)
 {
     int idx;
@@ -407,6 +379,7 @@ void *filterTask(void* arg)
     init_signal(idx);
     init_filter(idx);
     printSignal(signals[idx]);
+    printFilter(filters[idx]);
 
     while(!end_flag)
     {
