@@ -241,10 +241,10 @@ void init_filter(int idx)
     filters[idx].color = floor(frand(WHITE, BLACK));
 }
 
-void clear_reset(int idx)
+void clear_reset(BITMAP* window, int idx)
 {
     //Clear Screen
-    clear_to_color(screen, BLACK); //Black Background
+    clear_to_color(window, BLACK); //Black Background
     //Reset Plot
     signals[idx].k = 0.0;
     signals[idx].t = 0.0;
@@ -291,7 +291,7 @@ void keyboard_interp()
             printFilter(filters[n_active_signals-1]);
 
             //Clear and reprint
-            clear_reset(n_active_signals-1);
+            clear_reset(screen, n_active_signals-1);
             printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
         }
         
@@ -311,7 +311,7 @@ void keyboard_interp()
                 printFilter(filters[n_active_signals-1]);
 
                 //Clear and reprint
-                clear_reset(n_active_signals-1);
+                clear_reset(screen, n_active_signals-1);
             }
                 
         }
@@ -331,7 +331,7 @@ void keyboard_interp()
             printFilter(filters[n_active_signals-1]);
 
             //Clear and reprint
-            clear_reset(n_active_signals-1);
+            clear_reset(screen, n_active_signals-1);
             printf("[MINUS] Decrement of 5 Hz last signal's frequency.\n");
         }
         
@@ -351,7 +351,7 @@ void keyboard_interp()
                 printFilter(filters[n_active_signals-1]);
 
                 //Clear and reprint
-                clear_reset(n_active_signals-1);
+                clear_reset(screen, n_active_signals-1);
             }
                 
         }
@@ -399,10 +399,10 @@ void *filterTask(void* arg)
 
         //Successive sample
         signals[idx].k++;
-        
+
         //Replot Signal when it reaches XLIM
-        if((WIDTH/XLIM)*signals[idx].t > WIDTH)
-            clear_reset(idx);
+        if((WIDTH/XLIM)*signals[n_active_signals-1].t > WIDTH)
+            clear_reset(screen, idx);
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
@@ -421,16 +421,23 @@ void *graphicTask(void* arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
+    //BITMAP *screen_copy; //This copy is necessary to avoid blinking
+    //screen_copy = create_bitmap(WIDTH, HEIGHT);
+    //clear_to_color(screen_copy, BLACK);
+
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
         if(n_active_signals > 0)
         {
+            //plotPoint(screen_copy, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
+            //plotPoint(screen_copy, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
             plotPoint(screen, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
             plotPoint(screen, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
         }
 
+        //blit(screen_copy, screen, 0, 0, 0, 0, WIDTH, HEIGHT); //finally, copies in original screen
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 

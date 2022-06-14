@@ -132,7 +132,7 @@ void init();
 void set_Ts(int idx);
 void init_signal(int idx);
 void init_filter(int idx);
-void clear_reset(int idx);
+void clear_reset(BITMAP* window, int idx);
 
 //Keyboard Interpreter
 void keyboard_interp();
