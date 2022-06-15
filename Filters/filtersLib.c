@@ -295,7 +295,7 @@ void init_filter(int idx)
     filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
     filters[idx].filter_type = LOW_PASS;
 
-    //filters[idx].f_cut = 3.0*input_signal.frequency;  //[Hz]
+    //filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
     //filters[idx].filter_type = HIGH_PASS;
 
     //Graphic Parameters
