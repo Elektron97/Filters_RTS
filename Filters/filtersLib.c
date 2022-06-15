@@ -545,7 +545,7 @@ void keyboard_interp()
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
-        break;        
+        break;  
 
         /*CLEAR REQUEST*/
         case KEY_C:
