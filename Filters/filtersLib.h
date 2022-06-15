@@ -113,7 +113,7 @@ struct Filter
     enum Filter_Type filter_type;
 
     //Graphic Attribute
-    double y_filterd;
+    double y_filtered;
     //double y_filterd[MAX_ORDER + 1]; TO DO
     int color;
 };

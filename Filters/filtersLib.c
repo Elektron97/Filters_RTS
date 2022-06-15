@@ -240,7 +240,7 @@ void init_filter(int idx)
     filters[idx].filter_type = LOW_PASS;
 
     //Graphic Parameters
-    filters[idx].y_filterd = 0.0;
+    filters[idx].y_filtered = 0.0;
     filters[idx].color = floor(frand(WHITE, BLACK));
 }
 
@@ -252,7 +252,7 @@ void clear_reset(BITMAP* window, int idx)
     input_signal.k = 0.0;
     input_signal.t = 0.0;
     input_signal.y = 0.0;
-    filters[idx].y_filterd = 0.0;
+    filters[idx].y_filtered = 0.0;
 }
 
 void draw_oscilloscope(BITMAP* osc, BITMAP* window)
@@ -262,18 +262,18 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     int osc_height = osc->h;
 
     rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
-    line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);
-    textout_ex(osc, font, "0", 5, osc_height/2 + 5, LIGHT_GRAY, -1);
-    textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);
-    textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);
+    line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);                                //time axis
+    textout_ex(osc, font, "0", 5, osc_height/2 + 5, LIGHT_GRAY, -1);                                //origin of plot
+    textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
+    textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);    //time label
 
     if(n_active_filters > 0)
     {
         plotPoint(osc, input_signal.t, input_signal.y, input_signal.color);
-        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filterd, filters[n_active_filters-1].color);
+        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered, filters[n_active_filters-1].color);
     }
 
-    //Replot Signal when it reaches XLIM OR If there is a clear request
+    //Replot Signal when it reaches XLIM OR if there is a clear request
     if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
     {
         clear_reset(osc, n_active_filters-1);
@@ -419,22 +419,21 @@ void keyboard_interp()
         break;
 
         /*INCREASE/DECREASE FREQUENCY*/
-        /*case KEY_PLUS_PAD:
+        case KEY_PLUS_PAD:
         pthread_mutex_lock(&mux_signal);
         if(input_signal.frequency + 5 <= FREQ_MAX)
         {
             input_signal.frequency += 5;
             //Re-compute Sampling Period
-            set_Ts(n_active_filters-1);
+            set_Ts();
             printSignal(input_signal);
             //Re-compute Cut Frequency
             filters[n_active_filters-1].f_cut = (1.0/3.0)*input_signal.frequency;
             printFilter(filters[n_active_filters-1]);
 
             //Clear and reprint
-            //clear_reset(screen, n_active_filters-1);
             clear_request = 1;
-            printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
+            printf("[PLUS] Increment of 5 Hz input signal's frequency.\n");
         }
         
         else
@@ -446,15 +445,15 @@ void keyboard_interp()
             {
                 input_signal.frequency = FREQ_MAX;
                 //Re-compute Sampling Period
-                set_Ts(n_active_filter-1);
+                set_Ts();
                 printSignal(input_signal);
                 //Re-compute Cut Frequency
-                filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
-                printFilter(filters[n_active_filter-1]);
+                filters[n_active_filters-1].f_cut = (1.0/3.0)*input_signal.frequency;
+                printFilter(filters[n_active_filters-1]);
 
                 //Clear and reprint
-                //clear_reset(screen, n_active_filter-1);
                 clear_request = 1;
+                printf("[PLUS] Setting signal's frequency to maximum frequency.\n");
             }
                 
         }
@@ -467,14 +466,13 @@ void keyboard_interp()
         {
             input_signal.frequency -= 5;
             //Re-compute Sampling Period
-            set_Ts(n_active_filter-1);
+            set_Ts();
             printSignal(input_signal);
             //Re-compute Cut Frequency
-            filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
-            printFilter(filters[n_active_filter-1]);
+            filters[n_active_filters-1].f_cut = (1.0/3.0)*input_signal.frequency;
+            printFilter(filters[n_active_filters-1]);
 
             //Clear and reprint
-            //clear_reset(screen, n_active_filter-1);
             clear_request = 1;
             printf("[MINUS] Decrement of 5 Hz last signal's frequency.\n");
         }
@@ -488,20 +486,19 @@ void keyboard_interp()
             {
                 input_signal.frequency = FREQ_MIN;
                 //Re-compute Sampling Period
-                set_Ts(n_active_filter-1);
+                set_Ts();
                 printSignal(input_signal);
                 //Re-compute Cut Frequency
-                filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
-                printFilter(filters[n_active_filter-1]);
+                filters[n_active_filters-1].f_cut = (1.0/3.0)*input_signal.frequency;
+                printFilter(filters[n_active_filters-1]);
 
                 //Clear and reprint
-                //clear_reset(screen, n_active_filter-1);
                 clear_request = 1;
             }
                 
         }
         pthread_mutex_unlock(&mux_signal);
-        break;*/
+        break;
 
         //to do:
         /*INCREASE/DECREASE AMPLITUDE*/
@@ -596,7 +593,7 @@ void *filterTask(void* arg)
 
         /***********BODY OF TASK**********/
         //Filters algorithm needs y(k-1) and x(k-1)
-        filters[idx].y_filterd = lowPassFilter(filters[idx].y_filterd, input_signal.y, 2.0*PI*(filters[idx].f_cut), input_signal.Ts);
+        filters[idx].y_filtered = lowPassFilter(filters[idx].y_filtered, input_signal.y, 2.0*PI*(filters[idx].f_cut), input_signal.Ts);
 
         /*COMPUTE SIGNAL*/
         signalRealization();
