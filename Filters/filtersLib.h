@@ -4,7 +4,6 @@
 /*DEFINE*/
 /*Filter and Signal parameters*/
 //maximum number
-#define MAX_SIGNALS 10
 #define MAX_FILTERS 10
 
 //min and maximum frequency
@@ -16,8 +15,8 @@
 
 /*Task Parameters*/
 //Index
-#define GIDX (MAX_SIGNALS + 1) //Graphic Task
-#define UIDX (MAX_SIGNALS + 2) //User Task
+#define GIDX (MAX_FILTERS + 1) //Graphic Task
+#define UIDX (MAX_FILTERS + 2) //User Task
 
 //Period
 #define FILTER_PERIOD   10     //[ms]
@@ -120,7 +119,7 @@ struct Filter
 };
 
 /*Global Resources*/
-struct Signal signals[MAX_SIGNALS];
+struct Signal input_signal;
 struct Filter filters[MAX_FILTERS];
 
 /*FUNCTION SIGNATURES*/
@@ -129,14 +128,14 @@ double sign(double x);
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
-void signalRealization(int idx);
+void signalRealization();
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
 
 //Init
 void init();
-void set_Ts(int idx);
-void init_signal(int idx);
+void set_Ts();
+void init_signal();
 void init_filter(int idx);
 void clear_reset(BITMAP* window, int idx);
 void draw_oscilloscope(BITMAP* osc, BITMAP* window);

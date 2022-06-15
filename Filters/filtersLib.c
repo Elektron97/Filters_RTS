@@ -15,8 +15,7 @@
 
 /*GLOBAL VARIABLES*/
 int end_flag = 0;
-//int n_active_filters = 0;
-int n_active_signals = 0;
+int n_active_filters = 0;
 
 //Clear and Reset request
 int clear_request = 0; // If 1, graphic task clears the screen
@@ -82,33 +81,33 @@ void plotPoint(BITMAP* window, double time, double y, int color)
     putpixel(window, (width/XLIM)*time, (height/2) + (height/2 - 1)*y, color);
 }
 
-void signalRealization(int idx)
+void signalRealization()
 {
-    signals[idx].t = signals[idx].k*signals[idx].Ts;
+    input_signal.t = input_signal.k*input_signal.Ts;
     // Update signal output
-    switch(signals[idx].signal_type)
+    switch(input_signal.signal_type)
     {
         case sinusoid:
         // y(k) = A sin(wt + phi)
-        signals[idx].y = signals[idx].amplitude*sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase);
+        input_signal.y = input_signal.amplitude*sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase);
         break;
 
         case square:
         // y(k) = A sgn(sin(wt + phi))
-        signals[idx].y = signals[idx].amplitude*sign(sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase));
+        input_signal.y = input_signal.amplitude*sign(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         case sawtooth:
         //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*signal.t + signal.phase)));
-        signals[idx].y = (2*signals[idx].amplitude/PI) * atan(1/(tan(PI*signals[idx].frequency*signals[idx].t + signals[idx].phase)));
+        input_signal.y = (2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
         break;
 
         case triang:
-        signals[idx].y = (2*signals[idx].amplitude/PI) * asin(sin(2*PI*signals[idx].frequency*signals[idx].t + signals[idx].phase));
+        input_signal.y = (2*input_signal.amplitude/PI) * asin(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         default:
-        signals[idx].y = 0.0;
+        input_signal.y = 0.0;
         printf("Singal Type not valid. Output setted to zero!\n");
         break;
     }
@@ -197,37 +196,37 @@ void init()
 	clear_to_color(screen, BLACK); //Black Background
 }
 
-void set_Ts(int idx)
+void set_Ts()
 {
-    if(signals[idx].frequency != 0)
+    if(input_signal.frequency != 0)
     {
         //fs = 100*f_signal | 100 samples for period
-        signals[idx].Ts = 1/(N_SAMPLE_PERIOD*signals[idx].frequency); 
+        input_signal.Ts = 1/(N_SAMPLE_PERIOD*input_signal.frequency); 
     }
 
     else
-        signals[idx].Ts = 0.01;
+        input_signal.Ts = 0.01;
 }
 
-void init_signal(int idx)
+void init_signal()
 {
     /****************************************************
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    signals[idx].amplitude =    frand(0.1, 1.0);
-    signals[idx].frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
-    signals[idx].phase =        frand(0, 2*PI);             //[rad]
-    signals[idx].signal_type =  floor(frand(sinusoid, triang));
+    input_signal.amplitude =    frand(0.1, 1.0);
+    input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
+    input_signal.phase =        frand(0, 2*PI);             //[rad]
+    input_signal.signal_type =  floor(frand(sinusoid, triang));
 
     //Init discrete time parameters
-    signals[idx].k = 0;
-    set_Ts(idx);
+    input_signal.k = 0;
+    set_Ts();
 
     //Graphic Parameters
-    signals[idx].t = 0.0;
-    signals[idx].y = 0.0;
-    signals[idx].color = floor(frand(WHITE, BLACK));
+    input_signal.t = 0.0;
+    input_signal.y = 0.0;
+    input_signal.color = floor(frand(WHITE, BLACK));
 }
 
 void init_filter(int idx)
@@ -237,7 +236,7 @@ void init_filter(int idx)
      ****************************************************/
     //Init general attributes
     filters[idx].gain = 1.0;
-    filters[idx].f_cut = (1.0/3.0)*signals[idx].frequency;  //[Hz]
+    filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
     filters[idx].filter_type = LOW_PASS;
 
     //Graphic Parameters
@@ -250,9 +249,9 @@ void clear_reset(BITMAP* window, int idx)
     //Clear Screen
     clear_to_color(window, BLACK); //Black Background
     //Reset Plot
-    signals[idx].k = 0.0;
-    signals[idx].t = 0.0;
-    signals[idx].y = 0.0;
+    input_signal.k = 0.0;
+    input_signal.t = 0.0;
+    input_signal.y = 0.0;
     filters[idx].y_filterd = 0.0;
 }
 
@@ -268,16 +267,16 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);
     textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);
 
-    if(n_active_signals > 0)
+    if(n_active_filters > 0)
     {
-        plotPoint(osc, signals[n_active_signals-1].t, signals[n_active_signals-1].y, signals[n_active_signals-1].color);
-        plotPoint(osc, signals[n_active_signals-1].t, filters[n_active_signals-1].y_filterd, filters[n_active_signals-1].color);
+        plotPoint(osc, input_signal.t, input_signal.y, input_signal.color);
+        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filterd, filters[n_active_filters-1].color);
     }
 
     //Replot Signal when it reaches XLIM OR If there is a clear request
-    if(((osc_width/XLIM)*signals[n_active_signals-1].t > osc_width) || clear_request)
+    if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
     {
-        clear_reset(osc, n_active_signals-1);
+        clear_reset(osc, n_active_filters-1);
         
         if(clear_request)
             clear_request = 0;
@@ -297,13 +296,13 @@ void draw_information(BITMAP* info, BITMAP* window)
     char s_gain[100];
     char s_Ts[100];
 
-    sprintf(s_freq, "Frequency: %5.2f [Hz]", signals[n_active_signals-1].frequency);
-    sprintf(s_phase, "Phase: %5.2f [rad]", signals[n_active_signals-1].phase);
-    sprintf(s_amp, "Amplitude: %5.2f", signals[n_active_signals-1].amplitude);
+    sprintf(s_freq, "Frequency: %5.2f [Hz]", input_signal.frequency);
+    sprintf(s_phase, "Phase: %5.2f [rad]", input_signal.phase);
+    sprintf(s_amp, "Amplitude: %5.2f", input_signal.amplitude);
 
-    sprintf(s_fcut, "Cut Frequency: %5.2f [Hz]", filters[n_active_signals-1].f_cut);
-    sprintf(s_gain, "Gain: %5.2f", filters[n_active_signals-1].gain);
-    sprintf(s_Ts, "Sampling Period: %5.2f [ms]", signals[n_active_signals-1].Ts*1000.0);
+    sprintf(s_fcut, "Cut Frequency: %5.2f [Hz]", filters[n_active_filters-1].f_cut);
+    sprintf(s_gain, "Gain: %5.2f", filters[n_active_filters-1].gain);
+    sprintf(s_Ts, "Sampling Period: %5.2f [ms]", input_signal.Ts*1000.0);
 
     //A bit not-optimized, sorry future Daniele
     clear_to_color(info, BLACK);
@@ -317,11 +316,11 @@ void draw_information(BITMAP* info, BITMAP* window)
     textout_ex(info, font, s_phase, INFO_SIGNAL_WIDTH, 30, WHITE, -1);
     textout_ex(info, font, s_amp, INFO_SIGNAL_WIDTH, 40, WHITE, -1);
 
-    if(n_active_signals == 0)
+    if(n_active_filters == 0)
         textout_ex(info, font, "Signal Type: Unkown", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
     else
     {
-        switch(signals[n_active_signals-1].signal_type)
+        switch(input_signal.signal_type)
         {
             case sinusoid:
             textout_ex(info, font, "Signal Type: Sinusoid", INFO_SIGNAL_WIDTH, 50, WHITE, -1);
@@ -346,17 +345,17 @@ void draw_information(BITMAP* info, BITMAP* window)
     }
     
     //Filter Information
-    textout_ex(info, font, "Filter Information:", INFO_FILTER_WIDTH, 10, CYAN, -1);
+    textout_ex(info, font, "Filter Information: (Last)", INFO_FILTER_WIDTH, 10, CYAN, -1);
     textout_ex(info, font, s_fcut, INFO_FILTER_WIDTH, 20, WHITE, -1);
     textout_ex(info, font, s_gain, INFO_FILTER_WIDTH, 30, WHITE, -1);
     textout_ex(info, font, s_Ts, INFO_FILTER_WIDTH, 40, WHITE, -1);
 
-    if(n_active_signals == 0)
+    if(n_active_filters == 0)
         textout_ex(info, font, "Filter Type: Unkown", INFO_FILTER_WIDTH, 50, WHITE, -1);
 
     else
     {
-        switch(filters[n_active_signals-1].filter_type)
+        switch(filters[n_active_filters-1].filter_type)
         {
             case LOW_PASS:
             textout_ex(info, font, "Filter Type: Low Pass", INFO_FILTER_WIDTH, 50, WHITE, -1);
@@ -397,53 +396,64 @@ void keyboard_interp()
     {
         /*CREATE A NEW SIGNAL*/
         case KEY_ENTER:
-        if(n_active_signals < MAX_SIGNALS)
+
+        //Init signal at first ENTER
+        if(n_active_filters == 0)
         {
-            n_active_signals++;
-            task_create(filterTask, n_active_signals-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
+            n_active_filters++;
+            init_signal();
+            task_create(filterTask, n_active_filters-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
+        }
+
+        //Clear plot and plot new filter
+        if((n_active_filters < MAX_FILTERS) && n_active_filters != 0)
+        {
+            n_active_filters++;
+            clear_request = 1;
+            task_create(filterTask, n_active_filters-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
         }
         else
-            printf("Numero massimo di segnali raggiunto.\n");
+            printf("Maximum number of filters reached.\n");
 
-        printf("[ENTER] Create a new signal.\n");
+        printf("[ENTER] Create a new filter.\n");
         break;
 
         /*INCREASE/DECREASE FREQUENCY*/
-        case KEY_PLUS_PAD:
+        /*case KEY_PLUS_PAD:
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].frequency + 5 <= FREQ_MAX)
+        if(input_signal.frequency + 5 <= FREQ_MAX)
         {
-            signals[n_active_signals-1].frequency += 5;
+            input_signal.frequency += 5;
             //Re-compute Sampling Period
-            set_Ts(n_active_signals-1);
-            printSignal(signals[n_active_signals-1]);
+            set_Ts(n_active_filters-1);
+            printSignal(input_signal);
             //Re-compute Cut Frequency
-            filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
-            printFilter(filters[n_active_signals-1]);
+            filters[n_active_filters-1].f_cut = (1.0/3.0)*input_signal.frequency;
+            printFilter(filters[n_active_filters-1]);
 
             //Clear and reprint
-            //clear_reset(screen, n_active_signals-1);
+            //clear_reset(screen, n_active_filters-1);
             clear_request = 1;
             printf("[PLUS] Increment of 5 Hz last signal's frequency.\n");
         }
         
         else
         {
-            if(signals[n_active_signals-1].frequency == FREQ_MAX)
+            if(input_signal.frequency == FREQ_MAX)
                 printf("[PLUS] Increment of signal's frequency not permitted: Maximum reached.\n");
 
             else
             {
-                signals[n_active_signals-1].frequency = FREQ_MAX;
+                input_signal.frequency = FREQ_MAX;
                 //Re-compute Sampling Period
-                set_Ts(n_active_signals-1);
-                printSignal(signals[n_active_signals-1]);
+                set_Ts(n_active_filter-1);
+                printSignal(input_signal);
                 //Re-compute Cut Frequency
-                filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
-                printFilter(filters[n_active_signals-1]);
+                filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
+                printFilter(filters[n_active_filter-1]);
 
                 //Clear and reprint
-                //clear_reset(screen, n_active_signals-1);
+                //clear_reset(screen, n_active_filter-1);
                 clear_request = 1;
             }
                 
@@ -453,45 +463,45 @@ void keyboard_interp()
 
         case KEY_MINUS_PAD:
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].frequency - 5 >= FREQ_MIN)
+        if(input_signal.frequency - 5 >= FREQ_MIN)
         {
-            signals[n_active_signals-1].frequency -= 5;
+            input_signal.frequency -= 5;
             //Re-compute Sampling Period
-            set_Ts(n_active_signals-1);
-            printSignal(signals[n_active_signals-1]);
+            set_Ts(n_active_filter-1);
+            printSignal(input_signal);
             //Re-compute Cut Frequency
-            filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
-            printFilter(filters[n_active_signals-1]);
+            filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
+            printFilter(filters[n_active_filter-1]);
 
             //Clear and reprint
-            //clear_reset(screen, n_active_signals-1);
+            //clear_reset(screen, n_active_filter-1);
             clear_request = 1;
             printf("[MINUS] Decrement of 5 Hz last signal's frequency.\n");
         }
         
         else
         {
-            if(signals[n_active_signals-1].frequency == FREQ_MIN)
+            if(input_signal.frequency == FREQ_MIN)
                 printf("[MINUS] Decrement of signal's frequency not permitted: Minimum reached.\n");
 
             else
             {
-                signals[n_active_signals-1].frequency = FREQ_MIN;
+                input_signal.frequency = FREQ_MIN;
                 //Re-compute Sampling Period
-                set_Ts(n_active_signals-1);
-                printSignal(signals[n_active_signals-1]);
+                set_Ts(n_active_filter-1);
+                printSignal(input_signal);
                 //Re-compute Cut Frequency
-                filters[n_active_signals-1].f_cut = (1.0/3.0)*signals[n_active_signals-1].frequency;
-                printFilter(filters[n_active_signals-1]);
+                filters[n_active_filter-1].f_cut = (1.0/3.0)*input_signal.frequency;
+                printFilter(filters[n_active_filter-1]);
 
                 //Clear and reprint
-                //clear_reset(screen, n_active_signals-1);
+                //clear_reset(screen, n_active_filter-1);
                 clear_request = 1;
             }
                 
         }
         pthread_mutex_unlock(&mux_signal);
-        break;
+        break;*/
 
         //to do:
         /*INCREASE/DECREASE AMPLITUDE*/
@@ -503,9 +513,9 @@ void keyboard_interp()
         case KEY_1:
         printf("[1] Change signal type in Sinusoidal.\n");
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].signal_type != sinusoid)
+        if(input_signal.signal_type != sinusoid)
         {
-            signals[n_active_signals-1].signal_type = sinusoid;
+            input_signal.signal_type = sinusoid;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
@@ -515,9 +525,9 @@ void keyboard_interp()
         case KEY_2:
         printf("[2] Change signal type in Square.\n");
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].signal_type != square)
+        if(input_signal.signal_type != square)
         {
-            signals[n_active_signals-1].signal_type = square;
+            input_signal.signal_type = square;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
@@ -527,9 +537,9 @@ void keyboard_interp()
         case KEY_3:
         printf("[3] Change signal type in Sawtooth.\n");
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].signal_type != sawtooth)
+        if(input_signal.signal_type != sawtooth)
         {
-            signals[n_active_signals-1].signal_type = sawtooth;
+            input_signal.signal_type = sawtooth;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
@@ -539,9 +549,9 @@ void keyboard_interp()
         case KEY_4:
         printf("[4] Change signal type in Triangular.\n");
         pthread_mutex_lock(&mux_signal);
-        if(signals[n_active_signals-1].signal_type != triang)
+        if(input_signal.signal_type != triang)
         {
-            signals[n_active_signals-1].signal_type = triang;
+            input_signal.signal_type = triang;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
@@ -576,9 +586,8 @@ void *filterTask(void* arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
-    init_signal(idx);
     init_filter(idx);
-    printSignal(signals[idx]);
+    printSignal(input_signal);
     printFilter(filters[idx]);
 
     while(!end_flag)
@@ -587,20 +596,20 @@ void *filterTask(void* arg)
 
         /***********BODY OF TASK**********/
         //Filters algorithm needs y(k-1) and x(k-1)
-        filters[idx].y_filterd = lowPassFilter(filters[idx].y_filterd, signals[idx].y, 2.0*PI*(filters[idx].f_cut), signals[idx].Ts);
+        filters[idx].y_filterd = lowPassFilter(filters[idx].y_filterd, input_signal.y, 2.0*PI*(filters[idx].f_cut), input_signal.Ts);
 
         /*COMPUTE SIGNAL*/
-        signalRealization(idx);
+        signalRealization();
 
         //Successive sample
-        signals[idx].k++;
+        input_signal.k++;
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
         if(deadline_miss(idx))
             printf("******Deadline Miss of Filter Task!******** \n");
 
-        wait_for_activation(idx);      
+        wait_for_activation(idx);   
     }
 
     return NULL;
