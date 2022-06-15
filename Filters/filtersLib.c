@@ -66,7 +66,8 @@ double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double T
      ************************************************/
 
     double p = exp(-a*Ts);
-    return (x_k - x_k_1) + p*y_k_1;
+    double y_k = (x_k - x_k_1) + p*y_k_1;
+    return y_k;
 }
 
 void plotPoint(BITMAP* window, double time, double y, int color)
@@ -144,11 +145,21 @@ void filterRealization(struct Signal signal, int idx)
     switch(filters[idx].filter_type)
     {
         case LOW_PASS:
+        /**********DEBUG***********/
+        /*printf("Debug Low Pass Filter:\n");
+        printf("{x(k), x(k-1)} = {%f, %f}\n", signal.y[0], signal.y[1]);
+        printf("y(k) = %f\n", filters[idx].y_filtered[0]);*/
+        /**************************/
         //Filters algorithm needs y(k-1) and x(k-1)
         filters[idx].y_filtered[0] = lowPassFilter(filters[idx].y_filtered[0], signal.y[1], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
 
         case HIGH_PASS:
+        /**********DEBUG***********/
+        /*printf("Debug High Pass Filter:\n");
+        printf("{x(k), x(k-1)} = {%f, %f}\n", signal.y[0], signal.y[1]);
+        printf("y(k) = %f\n", filters[idx].y_filtered[0]);*/
+        /**************************/
         //Filters algorithm needs y(k-1), x(k) and x(k-1)
         filters[idx].y_filtered[0] = highPassFilter(signal.y[0], signal.y[1], filters[idx].y_filtered[0], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
@@ -677,8 +688,8 @@ void *filterTask(void* arg)
     set_activation(idx);
 
     init_filter(idx);
-    printSignal(input_signal);
-    printFilter(filters[idx]);
+    //printSignal(input_signal);
+    //printFilter(filters[idx]);
 
     while(!end_flag)
     {
