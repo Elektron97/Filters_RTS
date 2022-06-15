@@ -83,34 +83,83 @@ void plotPoint(BITMAP* window, double time, double y, int color)
 
 void signalRealization()
 {
+    //Compute time
     input_signal.t = input_signal.k*input_signal.Ts;
+
+    //Update signal's output vector
+    int i;
+    for(i = 1; i <= MAX_ORDER; i++)
+    {
+        //y(k-1) = y(k)
+        //y(k-2) = y(k-1)
+        //...
+        //y(k-MAX_ORDER) = y(k-MAX_ORDER+1)
+
+        input_signal.y[i] = input_signal.y[i-1];
+    }
+
     // Update signal output
     switch(input_signal.signal_type)
     {
         case sinusoid:
         // y(k) = A sin(wt + phi)
-        input_signal.y = input_signal.amplitude*sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase);
+        input_signal.y[0] = input_signal.amplitude*sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase);
         break;
 
         case square:
         // y(k) = A sgn(sin(wt + phi))
-        input_signal.y = input_signal.amplitude*sign(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
+        input_signal.y[0] = input_signal.amplitude*sign(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         case sawtooth:
         //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*signal.t + signal.phase)));
-        input_signal.y = (2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
+        input_signal.y[0] = (2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
         break;
 
         case triang:
-        input_signal.y = (2*input_signal.amplitude/PI) * asin(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
+        input_signal.y[0] = (2*input_signal.amplitude/PI) * asin(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         default:
-        input_signal.y = 0.0;
+        input_signal.y[0] = 0.0;
         printf("Singal Type not valid. Output setted to zero!\n");
         break;
     }
+
+}
+
+void filterRealization(struct Signal signal, int idx)
+{
+    //Update filter's output vector
+    int i;
+    for(i = 1; i <= MAX_ORDER; i++)
+    {
+        //y(k-1) = y(k)
+        //y(k-2) = y(k-1)
+        //...
+        //y(k-MAX_ORDER) = y(k-MAX_ORDER+1)
+
+        filters[idx].y_filtered[i] = filters[idx].y_filtered[i-1];
+    }
+
+    switch(filters[idx].filter_type)
+    {
+        case LOW_PASS:
+        //Filters algorithm needs y(k-1) and x(k-1)
+        filters[idx].y_filtered[0] = lowPassFilter(filters[idx].y_filtered[0], signal.y[1], 2.0*PI*(filters[idx].f_cut), signal.Ts);
+        break;
+
+        case HIGH_PASS:
+        //Filters algorithm needs y(k-1), x(k) and x(k-1)
+        filters[idx].y_filtered[0] = highPassFilter(signal.y[0], signal.y[1], filters[idx].y_filtered[0], 2.0*PI*(filters[idx].f_cut), signal.Ts);
+        break;
+
+        default:
+        filters[idx].y_filtered[0] = 0.0;
+        printf("Filter Type not valid. Output setted to zero!\n");
+        break;
+    }
+
 
 }
 
@@ -225,7 +274,14 @@ void init_signal()
 
     //Graphic Parameters
     input_signal.t = 0.0;
-    input_signal.y = 0.0;
+
+    //Init signal realization
+    int i;
+    for(i = 0; i <= MAX_ORDER; i++)
+    {
+        input_signal.y[i] = 0.0;
+    }
+    
     input_signal.color = floor(frand(WHITE, BLACK));
 }
 
@@ -237,11 +293,17 @@ void init_filter(int idx)
     //Init general attributes
     filters[idx].gain = 1.0;
     filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = LOW_PASS;
+    filters[idx].filter_type = HIGH_PASS;
 
     //Graphic Parameters
-    filters[idx].y_filtered = 0.0;
     filters[idx].color = floor(frand(WHITE, BLACK));
+
+    //Init signal realization
+    int i;
+    for(i = 0; i <= MAX_ORDER; i++)
+    {
+        filters[idx].y_filtered[i] = 0.0;
+    }
 }
 
 void clear_reset(BITMAP* window, int idx)
@@ -251,8 +313,14 @@ void clear_reset(BITMAP* window, int idx)
     //Reset Plot
     input_signal.k = 0.0;
     input_signal.t = 0.0;
-    input_signal.y = 0.0;
-    filters[idx].y_filtered = 0.0;
+
+    //Init signal realization
+    int i;
+    for(i = 0; i <= MAX_ORDER; i++)
+    {
+        input_signal.y[i] = 0.0;
+        filters[idx].y_filtered[i] = 0.0;
+    }
 }
 
 void draw_oscilloscope(BITMAP* osc, BITMAP* window)
@@ -269,8 +337,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     if(n_active_filters > 0)
     {
-        plotPoint(osc, input_signal.t, input_signal.y, input_signal.color);
-        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered, filters[n_active_filters-1].color);
+        plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
+        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered[0], filters[n_active_filters-1].color);
     }
 
     //Replot Signal when it reaches XLIM OR if there is a clear request
@@ -592,11 +660,11 @@ void *filterTask(void* arg)
         pthread_mutex_lock(&mux_signal);
 
         /***********BODY OF TASK**********/
-        //Filters algorithm needs y(k-1) and x(k-1)
-        filters[idx].y_filtered = lowPassFilter(filters[idx].y_filtered, input_signal.y, 2.0*PI*(filters[idx].f_cut), input_signal.Ts);
-
         /*COMPUTE SIGNAL*/
         signalRealization();
+
+        /*COMPUTE FILTER*/
+        filterRealization(input_signal, idx);
 
         //Successive sample
         input_signal.k++;

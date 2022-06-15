@@ -100,8 +100,8 @@ struct Signal
 
     //Graphic Attribute
     double t;           //[s]
-    double y;
-    //double y[MAX_ORDER + 1]; TO DO
+    //double y;
+    double y[MAX_ORDER + 1]; 
     int    color;
 };
 
@@ -113,10 +113,19 @@ struct Filter
     enum Filter_Type filter_type;
 
     //Graphic Attribute
-    double y_filtered;
-    //double y_filterd[MAX_ORDER + 1]; TO DO
+    //double y_filtered;
+    double y_filtered[MAX_ORDER + 1]; //{y(k), y(k-1), ..., y(k-MAX_ORDER)}
     int color;
 };
+
+/****************************************************
+ * Note on struct Signal & Filter:                  *
+ * signal.y and filter.y_filtered are array         *
+ * because a n-order filter needs n past samples    *
+ * to compute filtered signal.                      *
+ * An example, for an first order high pass filter, *
+ * algorithm needs x(k), x(k-1) and y(k-1).         *
+ ****************************************************/
 
 /*Global Resources*/
 struct Signal input_signal;
@@ -129,6 +138,7 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
 void signalRealization();
+void filterRealization();
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
 
@@ -137,6 +147,8 @@ void init();
 void set_Ts();
 void init_signal();
 void init_filter(int idx);
+
+//Graphics
 void clear_reset(BITMAP* window, int idx);
 void draw_oscilloscope(BITMAP* osc, BITMAP* window);
 void draw_information(BITMAP* info, BITMAP* window);
