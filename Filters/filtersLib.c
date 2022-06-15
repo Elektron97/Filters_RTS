@@ -112,8 +112,7 @@ void signalRealization()
         break;
 
         case sawtooth:
-        //y = - (2*signal.amplitude/PI) * atan(1/(tan(PI*signal.frequency*signal.t + signal.phase)));
-        input_signal.y[0] = (2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
+        input_signal.y[0] = -(2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
         break;
 
         case triang:
@@ -623,7 +622,30 @@ void keyboard_interp()
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
-        break;  
+        break;
+
+        /*CHANGE FILTER TYPE*/
+        case KEY_5:
+        printf("[5] Change filter type in Low Pass.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(filters[n_active_filters-1].filter_type != LOW_PASS)
+        {
+            filters[n_active_filters-1].filter_type = LOW_PASS;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_6:
+        printf("[6] Change filter type in High Pass.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(filters[n_active_filters-1].filter_type != HIGH_PASS)
+        {
+            filters[n_active_filters-1].filter_type = HIGH_PASS;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
 
         /*CLEAR REQUEST*/
         case KEY_C:
