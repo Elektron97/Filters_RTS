@@ -104,20 +104,20 @@ void signalRealization()
     {
         case sinusoid:
         // y(k) = A sin(wt + phi)
-        input_signal.y[0] = input_signal.amplitude*sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase);
+        input_signal.y[0] = input_signal.amplitude*sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase);
         break;
 
         case square:
         // y(k) = A sgn(sin(wt + phi))
-        input_signal.y[0] = input_signal.amplitude*sign(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
+        input_signal.y[0] = input_signal.amplitude*sign(sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         case sawtooth:
-        input_signal.y[0] = -(2*input_signal.amplitude/PI) * atan(1/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
+        input_signal.y[0] = -(2.0*input_signal.amplitude/PI) * atan(1.0/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
         break;
 
         case triang:
-        input_signal.y[0] = (2*input_signal.amplitude/PI) * asin(sin(2*PI*input_signal.frequency*input_signal.t + input_signal.phase));
+        input_signal.y[0] = (2.0*input_signal.amplitude/PI) * asin(sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase));
         break;
 
         default:
@@ -130,8 +130,17 @@ void signalRealization()
 
 void filterRealization(struct Signal signal, int idx)
 {
+    /******DEBUG FILTER*******/
+    //This section is focus on debug update law filter
+    /*printf("******DEBUG FILTER*******\n");
+    printf("* Iteration: %d\n", signal.k);
+    printf("* Input Signal: {x(k) = %f, x(k-1) = %f}\n", signal.y[0], signal.y[1]);
+    printf("* Old Filter: {y(k-1) = %f, y(k-2) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
+    printf("* Now, update filter vector: Discard y(k-2) and save y(k-1) in y(k-2)\n");*/
+
     //Update filter's output vector
     int i;
+
     for(i = 1; i <= MAX_ORDER; i++)
     {
         //y(k-1) = y(k)
@@ -142,24 +151,17 @@ void filterRealization(struct Signal signal, int idx)
         filters[idx].y_filtered[i] = filters[idx].y_filtered[i-1];
     }
 
+    //printf("* Updated Filter Vector: {y(k-1) = %f, y(k-1) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
+
     switch(filters[idx].filter_type)
     {
         case LOW_PASS:
-        /**********DEBUG***********/
-        /*printf("Debug Low Pass Filter:\n");
-        printf("{x(k), x(k-1)} = {%f, %f}\n", signal.y[0], signal.y[1]);
-        printf("y(k) = %f\n", filters[idx].y_filtered[0]);*/
-        /**************************/
         //Filters algorithm needs y(k-1) and x(k-1)
         filters[idx].y_filtered[0] = lowPassFilter(filters[idx].y_filtered[0], signal.y[1], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
 
         case HIGH_PASS:
-        /**********DEBUG***********/
-        /*printf("Debug High Pass Filter:\n");
-        printf("{x(k), x(k-1)} = {%f, %f}\n", signal.y[0], signal.y[1]);
-        printf("y(k) = %f\n", filters[idx].y_filtered[0]);*/
-        /**************************/
+
         //Filters algorithm needs y(k-1), x(k) and x(k-1)
         filters[idx].y_filtered[0] = highPassFilter(signal.y[0], signal.y[1], filters[idx].y_filtered[0], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
@@ -169,13 +171,14 @@ void filterRealization(struct Signal signal, int idx)
         printf("Filter Type not valid. Output setted to zero!\n");
         break;
     }
-
-
+    //printf("* Computed Filter Vector: {y(k) = %f, y(k-1) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
+    //printf("*************************\n");
+    
 }
 
 void printSignal(struct Signal signal)
 {
-    printf("********PLOT SIGNAL INFORMATION********\n");
+    printf("********PRINT SIGNAL INFORMATION********\n");
 
     switch(signal.signal_type)
     {
@@ -209,7 +212,7 @@ void printSignal(struct Signal signal)
 
 void printFilter(struct Filter filter)
 {
-    printf("********PLOT SIGNAL INFORMATION********\n");
+    printf("********PRINT FILTER INFORMATION********\n");
 
     switch(filter.filter_type)
     {
@@ -302,11 +305,11 @@ void init_filter(int idx)
      ****************************************************/
     //Init general attributes
     filters[idx].gain = 1.0;
-    filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = LOW_PASS;
-
     //filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    //filters[idx].filter_type = HIGH_PASS;
+    //filters[idx].filter_type = LOW_PASS;
+
+    filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
+    filters[idx].filter_type = HIGH_PASS;
 
     //Graphic Parameters
     filters[idx].color = floor(frand(WHITE, BLACK));
@@ -477,20 +480,16 @@ void keyboard_interp()
     {
         /*CREATE A NEW SIGNAL*/
         case KEY_ENTER:
-
-        //Init signal at first ENTER
-        if(n_active_filters == 0)
-        {
-            n_active_filters++;
-            init_signal();
-            task_create(filterTask, n_active_filters-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
-        }
-
         //Clear plot and plot new filter
-        if((n_active_filters < MAX_FILTERS) && n_active_filters != 0)
+        if(n_active_filters < MAX_FILTERS)
         {
+            if(n_active_filters == 0)
+                init_signal();
+                
+            else
+                clear_request = 1;
+
             n_active_filters++;
-            clear_request = 1;
             task_create(filterTask, n_active_filters-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
         }
         else
@@ -694,7 +693,6 @@ void *filterTask(void* arg)
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
-
         /***********BODY OF TASK**********/
         /*COMPUTE SIGNAL*/
         signalRealization();
