@@ -72,6 +72,30 @@ double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double T
     return y_k;
 }
 
+double bandPassFilter(double x_k_1, double x_k_2, double y_k_1, double y_k_2, double a1, double a2, double Ts)
+{
+    /************************************************
+     *  BAND PASS FILTER:                           *
+     * This function compute the discrete time form *
+     * of transfer function G(s):                   *
+     *              a1              s               *
+     * G(s) =  -----------  x  ------------         *
+     *          s   +   a1      s   +   a2          *      
+     *                                              *    
+     * a_i = omega_cut = 2*PI*f_cut_i               *
+     ************************************************/
+
+    //Note: a1 > a2
+    //To do: recompute algorithm
+
+    double A = a1/(a2-a1);
+    double p1 = exp(-a1*Ts);
+    double p2 = exp(-a2*Ts);
+
+    double y_k = (p1 + p2)*y_k_1 - (p1*p2)*y_k_2 + A*(p2-p1)*(x_k_2 - x_k_1);
+    return y_k; 
+}
+
 void plotPoint(BITMAP* window, double time, double y, int color)
 {
     //scaled_time = (WIDTH/XLIM)*time;
@@ -91,12 +115,12 @@ void signalRealization()
 
     //Update signal's output vector
     int i;
-    for(i = 1; i <= MAX_ORDER; i++)
+    for(i = MAX_ORDER; i > 0; i--)
     {
-        //y(k-1) = y(k)
-        //y(k-2) = y(k-1)
-        //...
         //y(k-MAX_ORDER) = y(k-MAX_ORDER+1)
+        //...
+        //y(k-2) = y(k-1)
+        //y(k-1) = y(k)
 
         input_signal.y[i] = input_signal.y[i-1];
     }
@@ -132,27 +156,17 @@ void signalRealization()
 
 void filterRealization(struct Signal signal, int idx)
 {
-    /******DEBUG FILTER*******/
-    //This section is focus on debug update law filter
-    /*printf("******DEBUG FILTER*******\n");
-    printf("* Iteration: %d\n", signal.k);
-    printf("* Input Signal: {x(k) = %f, x(k-1) = %f}\n", signal.y[0], signal.y[1]);
-    printf("* Old Filter: {y(k-1) = %f, y(k-2) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
-    printf("* Now, update filter vector: Discard y(k-2) and save y(k-1) in y(k-2)\n");*/
-
     //Update filter's output vector
-    int i;    
-    for(i = 1; i <= MAX_ORDER; i++)
+    int i;
+    for(i = MAX_ORDER; i > 0; i--)
     {
-        //y(k-1) = y(k)
-        //y(k-2) = y(k-1)
-        //...
         //y(k-MAX_ORDER) = y(k-MAX_ORDER+1)
+        //...
+        //y(k-2) = y(k-1)
+        //y(k-1) = y(k)
 
         filters[idx].y_filtered[i] = filters[idx].y_filtered[i-1];
     }
-
-    //printf("* Updated Filter Vector: {y(k-1) = %f, y(k-1) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
 
     switch(filters[idx].filter_type)
     {
@@ -166,13 +180,17 @@ void filterRealization(struct Signal signal, int idx)
         filters[idx].y_filtered[0] = highPassFilter(signal.y[0], signal.y[1], filters[idx].y_filtered[0], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
 
+        case BAND_PASS:
+        //Filters algorithm needs y(k-1), y(k-2), x(k-1) and x(k-2)
+        // a1 : f_low | a2 : f_high
+        filters[idx].y_filtered[0] = bandPassFilter(signal.y[1], signal.y[2], filters[idx].y_filtered[1], filters[idx].y_filtered[2], 2.0*PI*(3.0*signal.frequency), 2.0*PI*(signal.frequency/3.0), signal.Ts);
+        break;
+
         default:
         filters[idx].y_filtered[0] = 0.0;
         printf("Filter Type not valid. Output setted to zero!\n");
         break;
     }
-    //printf("* Computed Filter Vector: {y(k) = %f, y(k-1) = %f}\n", filters[idx].y_filtered[0], filters[idx].y_filtered[1]);
-    //printf("*************************\n");
     
 }
 
@@ -306,7 +324,7 @@ void init_filter(int idx)
     //Init general attributes
     filters[idx].gain = 1.0;
     filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = floor(frand(LOW_PASS, HIGH_PASS));
+    filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
 
     //Graphic Parameters
     filters[idx].color = floor(frand(WHITE, BLACK));
@@ -389,7 +407,7 @@ void draw_information(BITMAP* info, BITMAP* window)
     clear_to_color(info, BLACK);
 
     //Title
-    textout_centre_ex(info, font, "FILTER TASK!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
+    textout_ex(info, font, "FILTERS APPLICATION!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
 
     //Signal Information
     textout_ex(info, font, "Signal Information:", INFO_SIGNAL_WIDTH, 10, YELLOW, -1);
@@ -649,6 +667,17 @@ void keyboard_interp()
         if(filters[n_active_filters-1].filter_type != HIGH_PASS)
         {
             filters[n_active_filters-1].filter_type = HIGH_PASS;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_7:
+        printf("[7] Change filter type in Band Pass.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(filters[n_active_filters-1].filter_type != BAND_PASS)
+        {
+            filters[n_active_filters-1].filter_type = BAND_PASS;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);

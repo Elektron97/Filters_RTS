@@ -11,7 +11,8 @@
 #define FREQ_MAX 100        // 100 Hz
 
 //n-order filter
-#define MAX_ORDER 1         //First Order (actually) 
+//#define MAX_ORDER 1         //First Order (actually) 
+#define MAX_ORDER 2         //Second Order
 
 /*Task Parameters*/
 //Index
@@ -136,6 +137,7 @@ struct Filter filters[MAX_FILTERS];
 double sign(double x);
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
+double bandPassFilter(double x_k_1, double x_k_2, double y_k_1, double y_k_2, double a1, double a2, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
 void signalRealization();
 void filterRealization();
