@@ -246,10 +246,6 @@ void printFilter(struct Filter filter)
         printf("* Filter Type: \t Band Pass\n");
         break;
 
-        case BAND_STOP:
-        printf("* Filter Type: \t Band Stop\n");
-        break;
-
         default:
         printf("* Filter Type not valid.\n");
         break;
@@ -466,10 +462,6 @@ void draw_information(BITMAP* info, BITMAP* window)
 
             case BAND_PASS:
             textout_ex(info, font, "Filter Type: Band Pass", INFO_FILTER_WIDTH, 50, WHITE, -1);
-            break;
-
-            case BAND_STOP:
-            textout_ex(info, font, "Filter Type: Band Stop", INFO_FILTER_WIDTH, 50, WHITE, -1);
             break;
 
             default:

@@ -82,8 +82,7 @@ enum Filter_Type
 {
     LOW_PASS,
     HIGH_PASS,
-    BAND_PASS,
-    BAND_STOP
+    BAND_PASS
 };
 
 /*STRUCTURES*/
