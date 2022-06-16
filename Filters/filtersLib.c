@@ -26,6 +26,8 @@ pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
 /*FUNCTIONS*/
 double sign(double x)
 {
+     /*SIGN FUNCTION:*/
+
     if(x > 0)
         return 1.0;
     if(x < 0)
@@ -139,8 +141,7 @@ void filterRealization(struct Signal signal, int idx)
     printf("* Now, update filter vector: Discard y(k-2) and save y(k-1) in y(k-2)\n");*/
 
     //Update filter's output vector
-    int i;
-
+    int i;    
     for(i = 1; i <= MAX_ORDER; i++)
     {
         //y(k-1) = y(k)
@@ -161,7 +162,6 @@ void filterRealization(struct Signal signal, int idx)
         break;
 
         case HIGH_PASS:
-
         //Filters algorithm needs y(k-1), x(k) and x(k-1)
         filters[idx].y_filtered[0] = highPassFilter(signal.y[0], signal.y[1], filters[idx].y_filtered[0], 2.0*PI*(filters[idx].f_cut), signal.Ts);
         break;
@@ -305,11 +305,8 @@ void init_filter(int idx)
      ****************************************************/
     //Init general attributes
     filters[idx].gain = 1.0;
-    //filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    //filters[idx].filter_type = LOW_PASS;
-
     filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = HIGH_PASS;
+    filters[idx].filter_type = floor(frand(LOW_PASS, HIGH_PASS));
 
     //Graphic Parameters
     filters[idx].color = floor(frand(WHITE, BLACK));
