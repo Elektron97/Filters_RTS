@@ -383,13 +383,13 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 void draw_information(BITMAP* info, BITMAP* window)
 {
     //String to print
-    char s_freq[100];
-    char s_phase[100];
-    char s_amp[100];
+    char s_freq[MAX_CHAR];
+    char s_phase[MAX_CHAR];
+    char s_amp[MAX_CHAR];
 
-    char s_fcut[100];
-    char s_gain[100];
-    char s_Ts[100];
+    char s_fcut[MAX_CHAR];
+    char s_gain[MAX_CHAR];
+    char s_Ts[MAX_CHAR];
 
     sprintf(s_freq, "Frequency: %5.2f [Hz]", input_signal.frequency);
     sprintf(s_phase, "Phase: %5.2f [rad]", input_signal.phase);
@@ -397,7 +397,7 @@ void draw_information(BITMAP* info, BITMAP* window)
 
     sprintf(s_fcut, "Cut Frequency: %5.2f [Hz]", filters[n_active_filters-1].f_cut);
     sprintf(s_gain, "Gain: %5.2f", filters[n_active_filters-1].gain);
-    sprintf(s_Ts, "Sampling Period: %5.2f [ms]", input_signal.Ts*1000.0);
+    sprintf(s_Ts, "Sampling Period: %5.2f [ms]", input_signal.Ts*1000.0); //Print sampling period [ms]
 
     //A bit not-optimized, sorry future Daniele
     clear_to_color(info, BLACK);
@@ -642,6 +642,7 @@ void keyboard_interp()
         break;
 
         /*CHANGE FILTER TYPE*/
+        //Low Pass
         case KEY_5:
         printf("[5] Change filter type in Low Pass.\n");
         pthread_mutex_lock(&mux_signal);
@@ -654,6 +655,7 @@ void keyboard_interp()
         break;
 
         case KEY_6:
+        //High Pass
         printf("[6] Change filter type in High Pass.\n");
         pthread_mutex_lock(&mux_signal);
         if(filters[n_active_filters-1].filter_type != HIGH_PASS)
@@ -665,11 +667,37 @@ void keyboard_interp()
         break;
 
         case KEY_7:
+        //Band Pass
         printf("[7] Change filter type in Band Pass.\n");
         pthread_mutex_lock(&mux_signal);
         if(filters[n_active_filters-1].filter_type != BAND_PASS)
         {
             filters[n_active_filters-1].filter_type = BAND_PASS;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        /*CHANGE COLOR OF SIGNAL*/
+        //Yellow
+        case KEY_Y:
+        printf("[Y] Change signal's color in Yellow.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(input_signal.color != YELLOW)
+        {
+            input_signal.color = YELLOW;
+            clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        //White
+        case KEY_W:
+        printf("[W] Change signal's color in White.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(input_signal.color != WHITE)
+        {
+            input_signal.color = WHITE;
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);

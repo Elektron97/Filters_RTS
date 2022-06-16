@@ -51,6 +51,9 @@
 //axis limit
 #define XLIM 1.0
 
+//String maximum length
+#define MAX_CHAR 50
+
 //Colors
 #define BLACK           0
 #define BLUE            1
