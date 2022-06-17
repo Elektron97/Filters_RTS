@@ -800,7 +800,7 @@ void *filterTask(void* arg)
         filterRealization(input_signal, idx);
 
         /*FFT*/
-        if(fft_request)
+        if(fft_enable)
             fftRealization();           
 
         //Successive sample
