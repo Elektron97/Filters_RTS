@@ -21,6 +21,10 @@ int n_active_filters = 0;
 //Clear and Reset request
 int clear_request = 0; // If 1, graphic task clears the screen
 
+//FFT enable and request
+int fft_enable = 1; //If 0, no FFT
+int fft_request = 0; //If 1, plot FFT
+
 /*SEMAPHORES: Mutex*/
 pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
 
@@ -193,6 +197,32 @@ void filterRealization(struct Signal signal, int idx)
         break;
     }
     
+}
+
+void fftRealization()
+{
+    if(input_signal.k < FFT_DATA)
+    {
+        //Store Data for FFT 
+        signal_fftData[input_signal.k] = input_signal.y[0];
+    }
+
+    if(input_signal.k == FFT_DATA)
+    {
+        fft(signal_fftData, FFT_DATA);
+
+        /*for (int i = 0; i < FFT_DATA; i++)
+        {
+            if (!cimag(signal_fftData[i]))
+                printf("%g ", creal(signal_fftData[i]));
+            else
+                printf("(%g, %g) ", creal(signal_fftData[i]), cimag(signal_fftData[i]));
+
+        }*/
+
+        fft_request = 1;
+        //end_flag = 1;
+    }
 }
 
 void printSignal(struct Signal signal)
@@ -768,6 +798,10 @@ void *filterTask(void* arg)
 
         /*COMPUTE FILTER*/
         filterRealization(input_signal, idx);
+
+        /*FFT*/
+        if(fft_request)
+            fftRealization();           
 
         //Successive sample
         input_signal.k++;

@@ -72,6 +72,9 @@
 #define YELLOW          14
 #define WHITE           15
 
+//FFT constant
+#define FFT_DATA 128 //Must be 2^N
+
 /*ENUMS*/
 enum Signal_Type 
 {
@@ -134,7 +137,10 @@ struct Filter
 struct Signal input_signal;
 struct Filter filters[MAX_FILTERS];
 
+//Complex typedef for FFT
 typedef double complex cplx;
+//Data for fft
+cplx signal_fftData[FFT_DATA];
 
 /*FUNCTION SIGNATURES*/
 //Functions
@@ -144,7 +150,8 @@ double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double T
 double bandPassFilter(double x_k_1, double x_k_2, double y_k_1, double y_k_2, double a1, double a2, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
 void signalRealization();
-void filterRealization();
+void filterRealization(struct Signal signal, int idx);
+void fftRealization();
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
 /*FFT*/
