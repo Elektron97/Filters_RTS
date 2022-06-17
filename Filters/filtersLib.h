@@ -134,6 +134,8 @@ struct Filter
 struct Signal input_signal;
 struct Filter filters[MAX_FILTERS];
 
+typedef double complex cplx;
+
 /*FUNCTION SIGNATURES*/
 //Functions
 double sign(double x);
@@ -145,6 +147,9 @@ void signalRealization();
 void filterRealization();
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
+/*FFT*/
+void _fft(cplx buf[], cplx out[], int n, int step);
+void fft(cplx buf[], int n);
 
 //Init
 void init();

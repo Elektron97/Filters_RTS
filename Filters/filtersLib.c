@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <complex.h>
 #include <pthread.h>
 #include <sched.h>
 #include <allegro.h>
@@ -254,6 +255,28 @@ void printFilter(struct Filter filter)
     printf("* Cut Freq:  \t %f [Hz]\n", filter.f_cut);
     printf("* Gain: \t %f\n", filter.gain);
     printf("***************************************\n");
+}
+
+void _fft(cplx buf[], cplx out[], int n, int step)
+{
+	if (step < n) {
+		_fft(out, buf, n, step * 2);
+		_fft(out + step, buf + step, n, step * 2);
+ 
+		for (int i = 0; i < n; i += 2 * step) {
+			cplx t = cexp(-I * PI * i / n) * out[i + step];
+			buf[i / 2]     = out[i] + t;
+			buf[(i + n)/2] = out[i] - t;
+		}
+	}
+}
+ 
+void fft(cplx buf[], int n)
+{
+	cplx out[n];
+	for (int i = 0; i < n; i++) out[i] = buf[i];
+ 
+	_fft(buf, out, n, 1);
 }
 
 void init()
