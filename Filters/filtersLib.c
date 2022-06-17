@@ -22,7 +22,7 @@ int n_active_filters = 0;
 int clear_request = 0; // If 1, graphic task clears the screen
 
 //FFT enable and request
-int fft_enable = 1; //If 0, no FFT
+int fft_enable = 0; //If 0, no FFT
 int fft_request = 0; //If 1, plot FFT
 
 /*SEMAPHORES: Mutex*/
@@ -201,27 +201,38 @@ void filterRealization(struct Signal signal, int idx)
 
 void fftRealization()
 {
-    if(input_signal.k < FFT_DATA)
+    if(input_signal.k < N_SAMPLE_PERIOD)
     {
         //Store Data for FFT 
         signal_fftData[input_signal.k] = input_signal.y[0];
     }
 
-    if(input_signal.k == FFT_DATA)
+    if(input_signal.k == N_SAMPLE_PERIOD)
     {
+        //fill data vector with (2^N - N_SAMPLE_PERIOD) idx with zeros
+        //To do: E' la strada giusta? Vediamo
+        int i;
+        for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
+        {
+            signal_fftData[i] = 0.0;
+        }
+
         fft(signal_fftData, FFT_DATA);
 
-        /*for (int i = 0; i < FFT_DATA; i++)
+        //Compute Magnitude of i-th Complex Number
+        //printf("FFT Data: {");
+        for(i = 0; i < FFT_DATA; i++)
         {
-            if (!cimag(signal_fftData[i]))
-                printf("%g ", creal(signal_fftData[i]));
-            else
-                printf("(%g, %g) ", creal(signal_fftData[i]), cimag(signal_fftData[i]));
+            signal_fftData[i] = sqrt(pow(creal(signal_fftData[i]), 2.0) +  pow(cimag(signal_fftData[i]), 2.0));
+            //printf("%f, ", signal_fftData[i]);
+        }
+        //printf("}\n");
 
-        }*/
-
+        //fft_request: Enable plotting fft.
         fft_request = 1;
-        //end_flag = 1;
+
+        //Debug
+        end_flag = 1;
     }
 }
 
