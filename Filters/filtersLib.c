@@ -354,15 +354,10 @@ void init_signal()
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    //input_signal.amplitude =    frand(0.1, 1.0);
-    //input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
-    //input_signal.phase =        frand(0, 2*PI);             //[rad]
-    //input_signal.signal_type =  floor(frand(sinusoid, triang));
-
-    input_signal.amplitude =    0.8;
-    input_signal.frequency =    30.0;  //[Hz]
-    input_signal.phase =        0.0;             //[rad]
-    input_signal.signal_type =  sinusoid;
+    input_signal.amplitude =    frand(0.1, 1.0);
+    input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
+    input_signal.phase =        frand(0, 2*PI);             //[rad]
+    input_signal.signal_type =  floor(frand(sinusoid, triang));
 
     //Init discrete time parameters
     input_signal.k = 0;
@@ -387,20 +382,12 @@ void init_filter(int idx)
      * INIT FILTER: Define initial parameter of filter. *
      ****************************************************/
     //Init general attributes
-    //filters[idx].gain = 1.0;
-    //filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    //filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
-
-    //Graphic Parameters
-    //filters[idx].color = floor(frand(WHITE, BLACK));
-
-    //Init general attributes
     filters[idx].gain = 1.0;
     filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = LOW_PASS;
+    filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
 
     //Graphic Parameters
-    filters[idx].color = WHITE;
+    filters[idx].color = floor(frand(WHITE, BLACK));
 
     //Init signal realization
     int i;
@@ -441,23 +428,31 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     if(n_active_filters > 0)
     {
-        /*int i;
+        int i;
+        //Plot every filters
         for(i = 0; i < n_active_filters; i++)
         {
             plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
             plotPoint(osc, input_signal.t, filters[i].y_filtered[0], filters[i].color);
-        }*/
-        plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
-        plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered[0], filters[n_active_filters-1].color);
-    }
+        }
 
-    //Replot Signal when it reaches XLIM OR if there is a clear request
-    if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
-    {
-        clear_reset(osc, n_active_filters-1);
-        
-        if(clear_request)
-            clear_request = 0;
+        //Plot only last filter
+        //plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
+        //plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered[0], filters[n_active_filters-1].color);
+    
+        //Replot Signal when it reaches XLIM OR if there is a clear request
+        if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
+        {
+            //Clear every filter
+            for(i = 0; i < n_active_filters; i++)
+            {
+                clear_reset(osc, i);
+            }    
+            
+            //Reset clear_request to zero
+            if(clear_request)
+                clear_request = 0;
+        }
     }
 
     blit(osc, window, 0, 0, 0, INFO_HEIGHT, osc_width, osc_height); //finally, copies in original screen
