@@ -354,10 +354,15 @@ void init_signal()
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    input_signal.amplitude =    frand(0.1, 1.0);
-    input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
-    input_signal.phase =        frand(0, 2*PI);             //[rad]
-    input_signal.signal_type =  floor(frand(sinusoid, triang));
+    //input_signal.amplitude =    frand(0.1, 1.0);
+    //input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
+    //input_signal.phase =        frand(0, 2*PI);             //[rad]
+    //input_signal.signal_type =  floor(frand(sinusoid, triang));
+
+    input_signal.amplitude =    0.8;
+    input_signal.frequency =    30.0;  //[Hz]
+    input_signal.phase =        0.0;             //[rad]
+    input_signal.signal_type =  sinusoid;
 
     //Init discrete time parameters
     input_signal.k = 0;
@@ -382,12 +387,20 @@ void init_filter(int idx)
      * INIT FILTER: Define initial parameter of filter. *
      ****************************************************/
     //Init general attributes
-    filters[idx].gain = 1.0;
-    filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
-    filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
+    //filters[idx].gain = 1.0;
+    //filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
+    //filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
 
     //Graphic Parameters
-    filters[idx].color = floor(frand(WHITE, BLACK));
+    //filters[idx].color = floor(frand(WHITE, BLACK));
+
+    //Init general attributes
+    filters[idx].gain = 1.0;
+    filters[idx].f_cut = (1.0/3.0)*input_signal.frequency;  //[Hz]
+    filters[idx].filter_type = LOW_PASS;
+
+    //Graphic Parameters
+    filters[idx].color = WHITE;
 
     //Init signal realization
     int i;
@@ -561,11 +574,15 @@ void keyboard_interp()
         if(n_active_filters < MAX_FILTERS)
         {
             if(n_active_filters == 0)
-                init_signal();
-                //task_create(signalTask, SIGNAL_IDX, SIGNAL_PERIOD, SIGNAL_PERIOD, SIGNAL_PRIO);
-                
+            {
+                //init_signal();
+                task_create(signalTask, SIGNAL_IDX, SIGNAL_PERIOD, SIGNAL_PERIOD, SIGNAL_PRIO);
+            }
+
             else
+            {
                 clear_request = 1;
+            }
 
             n_active_filters++;
             task_create(filterTask, n_active_filters-1, FILTER_PERIOD, FILTER_PERIOD, FILTER_PRIO);
@@ -830,7 +847,7 @@ void *signalTask(void *arg)
 }
 
 /*OLD FILTER TASK*/
-void *filterTask(void* arg)
+/*void *filterTask(void* arg)
 {
     int idx;
     idx = get_task_index(arg);
@@ -863,9 +880,9 @@ void *filterTask(void* arg)
     }
 
     return NULL;
-}
+}*/
 
-/*void *filterTask(void* arg)
+void *filterTask(void* arg)
 {
     int idx;
     idx = get_task_index(arg);
@@ -873,8 +890,6 @@ void *filterTask(void* arg)
 
     init_filter(idx);
     printFilter(filters[idx]);
-
-    //printf("Filter idx: %d\n", idx);
 
     while(!end_flag)
     {
@@ -896,7 +911,7 @@ void *filterTask(void* arg)
     }
 
     return NULL;
-}*/
+}
 
 void *graphicTask(void* arg)
 {
