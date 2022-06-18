@@ -397,7 +397,28 @@ void init_filter(int idx)
     }
 }
 
-void clear_reset(BITMAP* window, int idx)
+void clear_reset(BITMAP* window)
+{
+    //Clear Screen
+    clear_to_color(window, BLACK); //Black Background
+    //Reset Plot
+    input_signal.k = 0.0;
+    input_signal.t = 0.0;
+
+    //Init signal and filters realization
+    int i, j;
+    for(i = 0; i < n_active_filters; i++)
+    {
+        for(j = 0; j <= MAX_ORDER; j++)
+        {
+            input_signal.y[j] = 0.0;
+            filters[i].y_filtered[j] = 0.0;
+        }
+    }
+
+}
+
+void clear_resetIdx(BITMAP* window, int idx)
 {
     //Clear Screen
     clear_to_color(window, BLACK); //Black Background
@@ -444,10 +465,13 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
         if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
         {
             //Clear every filter
-            for(i = 0; i < n_active_filters; i++)
+            clear_reset(osc);
+
+            /*for(i = 0; i < n_active_filters; i++)
             {
-                clear_reset(osc, i);
-            }    
+                //Not-optimized: To do clear_reset() not specifying idx
+                clear_resetIdx(osc, i);
+            }*/    
             
             //Reset clear_request to zero
             if(clear_request)
@@ -482,6 +506,9 @@ void draw_information(BITMAP* info, BITMAP* window)
 
     //Title
     textout_ex(info, font, "FILTERS APPLICATION!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
+
+    //Signal and Filters legend
+    //To do: Rect and Rectfill for signal and filters
 
     //Signal Information
     textout_ex(info, font, "Signal Information:", INFO_SIGNAL_WIDTH, 10, YELLOW, -1);
@@ -840,42 +867,6 @@ void *signalTask(void *arg)
 
     return NULL;
 }
-
-/*OLD FILTER TASK*/
-/*void *filterTask(void* arg)
-{
-    int idx;
-    idx = get_task_index(arg);
-    set_activation(idx);
-
-    init_filter(idx);
-    printFilter(filters[idx]);
-
-    while(!end_flag)
-    {
-        pthread_mutex_lock(&mux_signal);
-        //COMPUTE SIGNAL
-        signalRealization();
-
-        //COMPUTE FILTER
-        filterRealization(input_signal, idx);
-
-        //FFT
-        if(fft_enable)
-            fftRealization();           
-
-        //Successive sample
-        input_signal.k++;
-        pthread_mutex_unlock(&mux_signal);
-
-        if(deadline_miss(idx))
-            printf("******Deadline Miss of Filter Task!******** \n");
-
-        wait_for_activation(idx);   
-    }
-
-    return NULL;
-}*/
 
 void *filterTask(void* arg)
 {

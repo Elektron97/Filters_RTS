@@ -168,7 +168,8 @@ void init_signal();
 void init_filter(int idx);
 
 //Graphics
-void clear_reset(BITMAP* window, int idx);
+void clear_reset(BITMAP* window);
+void clear_resetIdx(BITMAP* window, int idx);
 void draw_oscilloscope(BITMAP* osc, BITMAP* window);
 void draw_information(BITMAP* info, BITMAP* window);
 
