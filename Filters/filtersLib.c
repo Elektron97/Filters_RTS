@@ -466,12 +466,6 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
         {
             //Clear every filter
             clear_reset(osc);
-
-            /*for(i = 0; i < n_active_filters; i++)
-            {
-                //Not-optimized: To do clear_reset() not specifying idx
-                clear_resetIdx(osc, i);
-            }*/    
             
             //Reset clear_request to zero
             if(clear_request)
@@ -845,8 +839,6 @@ void *signalTask(void *arg)
     init_signal();
     printSignal(input_signal);
 
-    //printf("Signal idx: %d\n", idx);
-
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
@@ -880,14 +872,14 @@ void *filterTask(void* arg)
     while(!end_flag)
     {
         pthread_mutex_lock(&mux_signal);
-
-        //COMPUTE FILTER
+        /***********BODY OF TASK**********/
+        /*COMPUTE FILTER*/
         filterRealization(input_signal, idx);
 
         //FFT (To do)
         if(fft_enable)
             fftRealization();           
-
+        /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
         if(deadline_miss(idx))
