@@ -428,6 +428,12 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     if(n_active_filters > 0)
     {
+        /*int i;
+        for(i = 0; i < n_active_filters; i++)
+        {
+            plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
+            plotPoint(osc, input_signal.t, filters[i].y_filtered[0], filters[i].color);
+        }*/
         plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
         plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered[0], filters[n_active_filters-1].color);
     }
@@ -556,6 +562,7 @@ void keyboard_interp()
         {
             if(n_active_filters == 0)
                 init_signal();
+                //task_create(signalTask, SIGNAL_IDX, SIGNAL_PERIOD, SIGNAL_PERIOD, SIGNAL_PRIO);
                 
             else
                 clear_request = 1;
@@ -790,15 +797,16 @@ void keyboard_interp()
     }
 }
 
-void *filterTask(void* arg)
+void *signalTask(void *arg)
 {
     int idx;
     idx = get_task_index(arg);
     set_activation(idx);
 
-    init_filter(idx);
-    //printSignal(input_signal);
-    //printFilter(filters[idx]);
+    init_signal();
+    printSignal(input_signal);
+
+    //printf("Signal idx: %d\n", idx);
 
     while(!end_flag)
     {
@@ -807,16 +815,45 @@ void *filterTask(void* arg)
         /*COMPUTE SIGNAL*/
         signalRealization();
 
-        /*COMPUTE FILTER*/
+        //Successive Sample
+        input_signal.k++;
+        /*********************************/
+        pthread_mutex_unlock(&mux_signal);
+
+        if(deadline_miss(idx))
+            printf("******Deadline Miss of Signal Task!******** \n");
+
+        wait_for_activation(idx);
+    }
+
+    return NULL;
+}
+
+/*OLD FILTER TASK*/
+void *filterTask(void* arg)
+{
+    int idx;
+    idx = get_task_index(arg);
+    set_activation(idx);
+
+    init_filter(idx);
+    printFilter(filters[idx]);
+
+    while(!end_flag)
+    {
+        pthread_mutex_lock(&mux_signal);
+        //COMPUTE SIGNAL
+        signalRealization();
+
+        //COMPUTE FILTER
         filterRealization(input_signal, idx);
 
-        /*FFT*/
+        //FFT
         if(fft_enable)
             fftRealization();           
 
         //Successive sample
         input_signal.k++;
-        /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
         if(deadline_miss(idx))
@@ -827,6 +864,39 @@ void *filterTask(void* arg)
 
     return NULL;
 }
+
+/*void *filterTask(void* arg)
+{
+    int idx;
+    idx = get_task_index(arg);
+    set_activation(idx);
+
+    init_filter(idx);
+    printFilter(filters[idx]);
+
+    //printf("Filter idx: %d\n", idx);
+
+    while(!end_flag)
+    {
+        pthread_mutex_lock(&mux_signal);
+
+        //COMPUTE FILTER
+        filterRealization(input_signal, idx);
+
+        //FFT (To do)
+        if(fft_enable)
+            fftRealization();           
+
+        pthread_mutex_unlock(&mux_signal);
+
+        if(deadline_miss(idx))
+            printf("******Deadline Miss of Filter Task!******** \n");
+
+        wait_for_activation(idx);   
+    }
+
+    return NULL;
+}*/
 
 void *graphicTask(void* arg)
 {

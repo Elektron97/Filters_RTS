@@ -16,15 +16,18 @@
 
 /*Task Parameters*/
 //Index
-#define GIDX (MAX_FILTERS + 1) //Graphic Task
-#define UIDX (MAX_FILTERS + 2) //User Task
+#define SIGNAL_IDX  MAX_FILTERS //Signal Task
+#define GIDX (MAX_FILTERS + 1)  //Graphic Task
+#define UIDX (MAX_FILTERS + 2)  //User Task
 
 //Period
+#define SIGNAL_PERIOD   10     //[ms]
 #define FILTER_PERIOD   10     //[ms]
 #define GRAPHIC_PERIOD  10     //[ms]
 #define USER_PERIOD     30     //[ms]
 
 //Priority  | 1 (low) - 99 (high)
+#define SIGNAL_PRIO     4
 #define FILTER_PRIO     3
 #define GRAPHIC_PRIO    2
 #define USER_PRIO       1
@@ -173,6 +176,7 @@ void draw_information(BITMAP* info, BITMAP* window);
 void keyboard_interp();
 
 /*TASKS*/
+void *signalTask(void *arg);
 void *filterTask(void* arg);
 void *graphicTask(void* arg);
 void *userTask(void* arg);
