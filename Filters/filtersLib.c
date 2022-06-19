@@ -388,7 +388,7 @@ void init_signal()
         input_signal.y[i] = 0.0;
     }
     
-    input_signal.color = floor(frand(WHITE, BLACK));
+    input_signal.color = floor(frand(BLACK, WHITE));
 }
 
 void init_filter(int idx)
@@ -402,7 +402,7 @@ void init_filter(int idx)
     filters[idx].filter_type = floor(frand(LOW_PASS, BAND_PASS));
 
     //Graphic Parameters
-    filters[idx].color = floor(frand(WHITE, BLACK));
+    filters[idx].color = floor(frand(BLACK, WHITE));
 
     //Init signal realization
     int i;
@@ -459,15 +459,36 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     /*DRAW PLOT GRAPHICS*/
     rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
     line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);                                //time axis
-    textout_ex(osc, font, "0", 5, osc_height/2 + 5, LIGHT_GRAY, -1);                                //origin of plot
+    //textout_ex(osc, font, "0", 5, osc_height/2 -10, LIGHT_GRAY, -1);                                //origin of plot
     textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
-    textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);    //time label
-    //textout_ex(osc, font, "1 s", osc_width - 30, osc_height/2 + 10, LIGHT_GRAY, -1);       //xlim
+    textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 - 10, LIGHT_GRAY, -1);    //time label
+    
+    //Grid
+    int i;
+    char s_grid[MAX_CHAR];
+    for(i = 0; i <= 10; i ++)
+    {
+        if(i == 0)
+            sprintf(s_grid, "  %d", i);
+        else
+            sprintf(s_grid, "%5.1f", ((float) i)/10.0);
+
+        if(i == 10)
+            textout_centre_ex(osc, font, s_grid, (osc_width/XLIM)*i/10.0 - 20, osc_height/2 + 10, LIGHT_GRAY, -1);
+        else
+            textout_centre_ex(osc, font, s_grid, (osc_width/XLIM)*i/10.0, osc_height/2 + 10, LIGHT_GRAY, -1);
+    }
+
+    for(i = 1; i < 10; i++)
+    {
+        sprintf(s_grid, "%5.1f", 1.0 - ((float) i)/10.0);
+        textout_centre_ex(osc, font, s_grid, 7, (osc_height/2 - 1)*((float) i)/10.0, LIGHT_GRAY, -1);
+    }
 
     /*PLOT SIGNAL AND FILTERS*/
     if(n_active_filters > 0)
     {
-        int i;
+        //int i;
 
         //Plot signal and filter points
         switch (plot_style)
