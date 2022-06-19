@@ -26,7 +26,7 @@ int fft_enable = 0; //If 0, no FFT
 int fft_request = 0; //If 1, plot FFT
 
 //plot preferences
-enum Plot_Style plot_style = POINT;
+enum Plot_Style plot_style = POINT; //Default: POINT
 
 /*SEMAPHORES: Mutex*/
 pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
