@@ -591,7 +591,8 @@ void keyboard_interp()
         {
             if(n_active_filters == 0)
             {
-                //init_signal();
+                //Init here and not in signalTask
+                init_signal();  
                 task_create(signalTask, SIGNAL_IDX, SIGNAL_PERIOD, SIGNAL_PERIOD, SIGNAL_PRIO);
             }
 
@@ -836,7 +837,7 @@ void *signalTask(void *arg)
     idx = get_task_index(arg);
     set_activation(idx);
 
-    init_signal();
+    //init_signal();    //init in keyboard_interp()
     printSignal(input_signal);
 
     while(!end_flag)
