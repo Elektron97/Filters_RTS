@@ -23,14 +23,14 @@
 //Period
 #define SIGNAL_PERIOD   10     //[ms]
 #define FILTER_PERIOD   10     //[ms]
-#define GRAPHIC_PERIOD  10     //[ms]
+#define GRAPHIC_PERIOD  20     //[ms]
 #define USER_PERIOD     30     //[ms]
 
 //Priority  | 1 (low) - 99 (high)
-#define SIGNAL_PRIO     4
-#define FILTER_PRIO     3
-#define GRAPHIC_PRIO    2
-#define USER_PRIO       1
+#define SIGNAL_PRIO     24
+#define FILTER_PRIO     23
+#define GRAPHIC_PRIO    22
+#define USER_PRIO       21
 
 //Math constants
 #define PI 3.14159

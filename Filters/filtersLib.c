@@ -369,7 +369,7 @@ void init_signal()
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    input_signal.amplitude =    frand(0.1, 1.0);
+    input_signal.amplitude =    frand(0.5, 0.8);
     input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
     input_signal.phase =        frand(0, 2*PI);             //[rad]
     input_signal.signal_type =  floor(frand(sinusoid, triang));
@@ -469,8 +469,7 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     {
         int i;
 
-        //Plot input signal point
-        
+        //Plot signal and filter points
         switch (plot_style)
         {
             case POINT:
