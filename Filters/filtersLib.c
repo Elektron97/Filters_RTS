@@ -113,7 +113,7 @@ void plotPoint(BITMAP* window, double time, double y, int color)
     int height = window->h;
 
     //Rescale & Plot
-    putpixel(window, (width/XLIM)*time, (height/2) + (height/2 - 1)*y, color);
+    putpixel(window, (width/XLIM)*time, (height/2) + ((height/2 - 1)/YLIM)*y, color);
 }
 
 void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double y_k_1, int color)
@@ -125,7 +125,7 @@ void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double 
     int height = window->h;
 
     //Rescale & Plot
-    line(window, (width/XLIM)*time_k_1, (height/2) + (height/2 - 1)*y_k_1, (width/XLIM)*time_k, (height/2) + (height/2 - 1)*y_k, color);
+    line(window, (width/XLIM)*time_k_1, (height/2) + ((height/2 - 1)/YLIM)*y_k_1, (width/XLIM)*time_k, (height/2) + ((height/2 - 1)/YLIM)*y_k, color);
 }
 
 void signalRealization()
@@ -463,6 +463,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
     textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 - 10, LIGHT_GRAY, -1);    //time label
     
+    //To do: da sistemare
+
     //Grid
     int i;
     char s_grid[MAX_CHAR];
@@ -471,7 +473,7 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
         if(i == 0)
             sprintf(s_grid, "  %d", i);
         else
-            sprintf(s_grid, "%5.1f", ((float) i)/10.0);
+            sprintf(s_grid, "%5.1f", ((float) i)*XLIM/10.0);
 
         if(i == 10)
             textout_centre_ex(osc, font, s_grid, (osc_width/XLIM)*i/10.0 - 20, osc_height/2 + 10, LIGHT_GRAY, -1);
@@ -481,8 +483,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     for(i = 1; i < 10; i++)
     {
-        sprintf(s_grid, "%5.1f", 1.0 - ((float) i)/10.0);
-        textout_centre_ex(osc, font, s_grid, 7, (osc_height/2 - 1)*((float) i)/10.0, LIGHT_GRAY, -1);
+        sprintf(s_grid, "%5.1f", 1.0 - ((float) i)*YLIM/10.0);
+        textout_centre_ex(osc, font, s_grid, 7, ((osc_height/2 - 1)/(YLIM))*((float) i)/10.0, LIGHT_GRAY, -1);
     }
 
     /*PLOT SIGNAL AND FILTERS*/

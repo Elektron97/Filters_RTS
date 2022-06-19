@@ -58,6 +58,7 @@
 
 //axis limit
 #define XLIM 1.0
+#define YLIM 1.0
 
 //String maximum length
 #define MAX_CHAR 50
