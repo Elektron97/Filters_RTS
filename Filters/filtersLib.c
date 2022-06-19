@@ -25,6 +25,9 @@ int clear_request = 0; // If 1, graphic task clears the screen
 int fft_enable = 0; //If 0, no FFT
 int fft_request = 0; //If 1, plot FFT
 
+//plot preferences
+enum Plot_Style plot_style = POINT;
+
 /*SEMAPHORES: Mutex*/
 pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
 
@@ -111,6 +114,18 @@ void plotPoint(BITMAP* window, double time, double y, int color)
 
     //Rescale & Plot
     putpixel(window, (width/XLIM)*time, (height/2) + (height/2 - 1)*y, color);
+}
+
+void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double y_k_1, int color)
+{
+    //scaled_time = (WIDTH/XLIM)*time;
+    //scaled_y = (HEIGHT/2) + (HEIGHT/2 - 1)*y;
+
+    int width = window->w;
+    int height = window->h;
+
+    //Rescale & Plot
+    line(window, (width/XLIM)*time_k_1, (height/2) + (height/2 - 1)*y_k_1, (width/XLIM)*time_k, (height/2) + (height/2 - 1)*y_k, color);
 }
 
 void signalRealization()
@@ -455,18 +470,33 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
         int i;
 
         //Plot input signal point
-        plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
         
-        //Plot every filters
-        for(i = 0; i < n_active_filters; i++)
+        switch (plot_style)
         {
-            plotPoint(osc, input_signal.t, filters[i].y_filtered[0], filters[i].color);
+            case POINT:
+            plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
+
+            //Plot every filters
+            for(i = 0; i < n_active_filters; i++)
+            {
+                plotPoint(osc, input_signal.t, filters[i].y_filtered[0], filters[i].color);
+            }
+            break;
+
+            case INTERP_LIN:
+            plotLin(osc, input_signal.t, input_signal.t - input_signal.Ts, input_signal.y[0], input_signal.y[1], input_signal.color);
+
+            //Plot every filters
+            for(i = 0; i < n_active_filters; i++)
+            {
+                plotLin(osc, input_signal.t, input_signal.t - input_signal.Ts, filters[i].y_filtered[0], filters[i].y_filtered[1], filters[i].color);
+            }
+            break;
+            
+            default:
+            break;
         }
 
-        //Plot only last filter
-        //plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
-        //plotPoint(osc, input_signal.t, filters[n_active_filters-1].y_filtered[0], filters[n_active_filters-1].color);
-    
         //Replot Signal when it reaches XLIM OR if there is a clear request
         if(((osc_width/XLIM)*input_signal.t > osc_width) || clear_request)
         {
@@ -504,8 +534,6 @@ void draw_information(BITMAP* info, BITMAP* window)
     //A bit not-optimized, sorry future Daniele
     clear_to_color(info, BLACK);
 
-
-
     //Init msg
     if(n_active_filters == 0)
     {
@@ -516,20 +544,28 @@ void draw_information(BITMAP* info, BITMAP* window)
         
     else
     {
-        textout_ex(info, font, "Press [ENTER] to add a filter.", COMMAND_WIDTH, 10, WHITE, -1);
-        textout_ex(info, font, "Press [SPACE] or [ESC] to close.", COMMAND_WIDTH, 20, WHITE, -1);
-        textout_ex(info, font, "Press [C] to replot.", COMMAND_WIDTH, 30, WHITE, -1);
-        textout_ex(info, font, "Press [+]/[-] to +/- 5 Hz.", COMMAND_WIDTH, 40, WHITE, -1);
-        textout_ex(info, font, "Press [1] for Sinusoidal Wave.", COMMAND_WIDTH, 50, WHITE, -1);
-        textout_ex(info, font, "Press [2] for Square Wave.", COMMAND_WIDTH + 280, 10, WHITE, -1);
-        textout_ex(info, font, "Press [3] for Sawtooth Wave.", COMMAND_WIDTH + 280, 20, WHITE, -1);
-        textout_ex(info, font, "Press [4] for Triangular Wave.", COMMAND_WIDTH + 280, 30, WHITE, -1);
-        textout_ex(info, font, "Press [5]/[6] for Low/High Pass.", COMMAND_WIDTH + 280, 40, WHITE, -1);
-        textout_ex(info, font, "Press [7] for Band Pass Filter.", COMMAND_WIDTH + 280, 50, WHITE, -1);
-    }
+        //First Box
+        rect(info, COMMAND_WIDTH -2, 10-2, COMMAND_WIDTH + 200, 60, LIGHT_GRAY);
+        textout_ex(info, font, "[ENTER]: Add a filter", COMMAND_WIDTH, 10, WHITE, -1);
+        textout_ex(info, font, "[SPACE]/[ESC]: close", COMMAND_WIDTH, 20, WHITE, -1);
+        textout_ex(info, font, "[C]: Clean plot", COMMAND_WIDTH, 30, WHITE, -1);
+        textout_ex(info, font, "[+]/[-]: +/- 5 Hz", COMMAND_WIDTH, 40, WHITE, -1);
+        textout_ex(info, font, "[S]: Change plot style", COMMAND_WIDTH, 50, WHITE, -1);
 
-    //Signal and Filters legend
-    //To do: Rect and Rectfill for signal and filters
+        //Second Box
+        rect(info, BOX_2 -2, 10-2, BOX_2 + 200, 60, LIGHT_GRAY);
+        textout_ex(info, font, "[1]: Sinusoidal", BOX_2, 10, WHITE, -1);
+        textout_ex(info, font, "[2]: Square", BOX_2, 20, WHITE, -1);
+        textout_ex(info, font, "[3]: Sawtooth", BOX_2, 30, WHITE, -1);
+        textout_ex(info, font, "[4]: Triangular", BOX_2, 40, WHITE, -1);
+        textout_ex(info, font, "[Y]/[W]: Change color", BOX_2, 50, WHITE, -1);
+
+        //Second Box
+        rect(info, BOX_3 -2, 10-2, BOX_3 + 170, 60, LIGHT_GRAY);
+        textout_ex(info, font, "[5]: Low Pass", BOX_3, 10, WHITE, -1);
+        textout_ex(info, font, "[6]: High Pass", BOX_3, 20, WHITE, -1);
+        textout_ex(info, font, "[7]: Band Pass", BOX_3, 30, WHITE, -1);
+    }
 
     //Signal Information
     textout_ex(info, font, "Signal Information:", INFO_SIGNAL_WIDTH, 10, YELLOW, -1);
@@ -719,10 +755,16 @@ void keyboard_interp()
         pthread_mutex_unlock(&mux_signal);
         break;
 
-        //to do:
-        /*INCREASE/DECREASE AMPLITUDE*/
+        /*CHANGE PLOT STYLE*/
+        case KEY_S:
+        if(plot_style == INTERP_LIN)
+            plot_style = POINT;
+        else
+            plot_style = INTERP_LIN;
 
-        /*INCREASE/DECREASE PHASE*/
+        clear_request = 1;
+        printf("[S] Change plot style.\n");
+        break;
 
         /*CHANGE SIGNAL TYPE*/
         //Sinusoidal

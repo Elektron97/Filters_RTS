@@ -48,6 +48,8 @@
 
 //Command information 
 #define COMMAND_WIDTH 10
+#define BOX_2 (COMMAND_WIDTH + 205)
+#define BOX_3 (BOX_2 + 205)
 
 //Information Tab height
 #define INFO_HEIGHT 68
@@ -95,6 +97,12 @@ enum Filter_Type
     LOW_PASS,
     HIGH_PASS,
     BAND_PASS
+};
+
+enum Plot_Style
+{
+    POINT,
+    INTERP_LIN
 };
 
 /*STRUCTURES*/
@@ -155,6 +163,7 @@ double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
 double bandPassFilter(double x_k_1, double x_k_2, double y_k_1, double y_k_2, double a1, double a2, double Ts);
 void plotPoint(BITMAP* window, double time, double y, int color);
+void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double y_k_1, int color);
 void signalRealization();
 void filterRealization(struct Signal signal, int idx);
 void fftRealization();
