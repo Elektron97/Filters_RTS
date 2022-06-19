@@ -46,9 +46,12 @@
 #define TITLE_WIDTH 50
 #define TITLE_HEIGHT 30
 
+//Command information 
+#define COMMAND_WIDTH 10
+
 //Information Tab height
 #define INFO_HEIGHT 68
-#define INFO_SIGNAL_WIDTH 500
+#define INFO_SIGNAL_WIDTH 600
 #define INFO_FILTER_WIDTH (INFO_SIGNAL_WIDTH + 200)
 
 //axis limit

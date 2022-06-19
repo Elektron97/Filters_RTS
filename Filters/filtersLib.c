@@ -504,12 +504,29 @@ void draw_information(BITMAP* info, BITMAP* window)
     //A bit not-optimized, sorry future Daniele
     clear_to_color(info, BLACK);
 
-    //Title
-    textout_ex(info, font, "FILTERS APPLICATION!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
+
 
     //Init msg
     if(n_active_filters == 0)
+    {
+        //Title
+        textout_ex(info, font, "FILTERS APPLICATION!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
         textout_ex(info, font, "Press [ENTER] to init.", TITLE_WIDTH + 200, TITLE_HEIGHT, WHITE, -1);
+    }
+        
+    else
+    {
+        textout_ex(info, font, "Press [ENTER] to add a filter.", COMMAND_WIDTH, 10, WHITE, -1);
+        textout_ex(info, font, "Press [SPACE] or [ESC] to close.", COMMAND_WIDTH, 20, WHITE, -1);
+        textout_ex(info, font, "Press [C] to replot.", COMMAND_WIDTH, 30, WHITE, -1);
+        textout_ex(info, font, "Press [+]/[-] to +/- 5 Hz.", COMMAND_WIDTH, 40, WHITE, -1);
+        textout_ex(info, font, "Press [1] for Sinusoidal Wave.", COMMAND_WIDTH, 50, WHITE, -1);
+        textout_ex(info, font, "Press [2] for Square Wave.", COMMAND_WIDTH + 280, 10, WHITE, -1);
+        textout_ex(info, font, "Press [3] for Sawtooth Wave.", COMMAND_WIDTH + 280, 20, WHITE, -1);
+        textout_ex(info, font, "Press [4] for Triangular Wave.", COMMAND_WIDTH + 280, 30, WHITE, -1);
+        textout_ex(info, font, "Press [5]/[6] for Low/High Pass.", COMMAND_WIDTH + 280, 40, WHITE, -1);
+        textout_ex(info, font, "Press [7] for Band Pass Filter.", COMMAND_WIDTH + 280, 50, WHITE, -1);
+    }
 
     //Signal and Filters legend
     //To do: Rect and Rectfill for signal and filters
