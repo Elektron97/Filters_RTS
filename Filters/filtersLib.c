@@ -441,19 +441,25 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     int osc_width = osc->w;
     int osc_height = osc->h;
 
+    /*DRAW PLOT GRAPHICS*/
     rect(osc, 1, osc_height-1, osc_width-1, 0, WHITE);
     line(osc, 0, osc_height/2, osc_width, osc_height/2, LIGHT_GRAY);                                //time axis
     textout_ex(osc, font, "0", 5, osc_height/2 + 5, LIGHT_GRAY, -1);                                //origin of plot
     textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
     textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 + 10, LIGHT_GRAY, -1);    //time label
+    //textout_ex(osc, font, "1 s", osc_width - 30, osc_height/2 + 10, LIGHT_GRAY, -1);       //xlim
 
+    /*PLOT SIGNAL AND FILTERS*/
     if(n_active_filters > 0)
     {
         int i;
+
+        //Plot input signal point
+        plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
+        
         //Plot every filters
         for(i = 0; i < n_active_filters; i++)
         {
-            plotPoint(osc, input_signal.t, input_signal.y[0], input_signal.color);
             plotPoint(osc, input_signal.t, filters[i].y_filtered[0], filters[i].color);
         }
 
@@ -500,6 +506,10 @@ void draw_information(BITMAP* info, BITMAP* window)
 
     //Title
     textout_ex(info, font, "FILTERS APPLICATION!", TITLE_WIDTH, TITLE_HEIGHT, RED, -1);
+
+    //Init msg
+    if(n_active_filters == 0)
+        textout_ex(info, font, "Press [ENTER] to init.", TITLE_WIDTH + 200, TITLE_HEIGHT, WHITE, -1);
 
     //Signal and Filters legend
     //To do: Rect and Rectfill for signal and filters
