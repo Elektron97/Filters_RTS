@@ -369,7 +369,7 @@ void init_signal()
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    input_signal.amplitude =    0.5; //frand(0.5, 0.8);
+    input_signal.amplitude =    0.8; //frand(0.5, 0.8);
     input_signal.frequency =    10.0; //frand(FREQ_MIN, FREQ_MAX);  //[Hz]
     input_signal.phase =        0.0; //frand(0, 2*PI);             //[rad]
     input_signal.signal_type =  sinusoid; //floor(frand(sinusoid, triang));
