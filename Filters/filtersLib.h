@@ -156,6 +156,7 @@ struct Filter filters[MAX_FILTERS];
 typedef double complex cplx;
 //Data for fft
 cplx signal_fftData[FFT_DATA];
+double frequency_label[2];  //To implement
 
 /*FUNCTION SIGNATURES*/
 //Functions

@@ -236,7 +236,14 @@ void fftRealization()
         //Compute Magnitude of i-th Complex Number
         for(i = 0; i < FFT_DATA; i++)
         {
-            signal_fftData[i] = sqrt(pow(creal(signal_fftData[i]), 2.0) +  pow(cimag(signal_fftData[i]), 2.0));
+            signal_fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(signal_fftData[i]), 2.0) +  pow(cimag(signal_fftData[i]), 2.0));
+        }
+
+        //P1 = signal_fftData(0:N_SAMPLE_PERIOD/2) -> dim (N_SAMPLE_PERIOD/2) + 1
+        //P1[1 : N_SAMPLE_PERIOD/2 - 1] = 2*P1[1 : N_SAMPLE_PERIOD/2 -1]
+        for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
+        {
+            signal_fftData[i] *= 2.0;
         }
 
         //fft_request: Enable plotting fft.
@@ -659,12 +666,51 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     textout_ex(fft_bitmap, font, "Mag", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
     textout_centre_ex(fft_bitmap, font, "Freq [Hz]", fft_width - 40, fft_height/2 - 10, LIGHT_GRAY, -1);    //frequency label
 
+    /*GRID*/
     int i;
+    if(n_active_filters > 0)
+    {
+        char s_grid[MAX_CHAR];
+        for(i = 0; i <= 10; i ++)
+        {
+            if(i == 0)
+                sprintf(s_grid, "  %d", i);
+            else
+                sprintf(s_grid, "%5.1f", ((float) i)*(1.0/(2.0*input_signal.Ts))/10.0);
+
+            if(i == 10)
+                textout_centre_ex(fft_bitmap, font, s_grid, fft_width*((float) i)/10.0 - 20, fft_height/2 + 10, LIGHT_GRAY, -1);
+            else
+                textout_centre_ex(fft_bitmap, font, s_grid, fft_width*((float) i)/10.0, fft_height/2 + 10, LIGHT_GRAY, -1);
+        }
+
+        for(i = 1; i < 10; i++)
+        {
+            sprintf(s_grid, "%5.1f", 1.0 - ((float) i)/10.0);
+            textout_centre_ex(fft_bitmap, font, s_grid, 7, (fft_height/2 - 1)*((float) i)/10.0, LIGHT_GRAY, -1);
+        }
+    }
+
     if(fft_request)
     {
-        for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
+        switch(plot_style)
         {
-            putpixel(fft_bitmap, (fft_width/(N_SAMPLE_PERIOD/2))*i, (fft_height/2) - (fft_height/2 - 1)*(2.0/N_SAMPLE_PERIOD)*(signal_fftData[i]), RED);
+            case POINT:
+            for(i = 0; i <= N_SAMPLE_PERIOD/2; i++)
+            {
+                putpixel(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i])), RED);
+            }
+            break;
+
+            case INTERP_LIN:
+            for(i = 0; i < N_SAMPLE_PERIOD/2; i++)
+            {
+                line(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*((i-1)/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i-1])), (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i])), RED);
+            }
+            break;
+
+            default:
+            break;
         }
 
         fft_request = 0;
