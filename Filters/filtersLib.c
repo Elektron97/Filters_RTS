@@ -455,8 +455,6 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
     //textout_ex(osc, font, "0", 5, osc_height/2 -10, LIGHT_GRAY, -1);                                //origin of plot
     textout_ex(osc, font, "Amp", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
     textout_centre_ex(osc, font, "time [s]", osc_width - 40, osc_height/2 - 10, LIGHT_GRAY, -1);    //time label
-    
-    //To do: da sistemare
 
     //Grid
     int i;
@@ -916,6 +914,16 @@ void keyboard_interp()
             clear_request = 1; //re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
+        break;
+        
+        /*FFT*/
+        case KEY_F:
+        printf("[F] Enable FFT of input signal.\n");
+        if(!fft_enable)
+        {
+            fft_enable = 1;
+            clear_request = 1;
+        }
         break;
 
         /*CLEAR REQUEST*/

@@ -12,46 +12,10 @@ Author: Daniele Caradonna.
 - **To compile**: `/project_folder/make`
 - **To run**: `sudo ./filters`
 
-### Periodic Task
-This task stamp Hello World and checks deadline misses.
+### Useful Links for FFT
 
-```
-void *helloWorldTask(void* arg)
-{
-    int idx;
+- [Rosetta Code](https://rosettacode.org/wiki/Fast_Fourier_transform#C)
 
-    idx = get_task_index(arg);
-    set_activation(idx);
+- [Tutorial 1](https://www.codeproject.com/Articles/9388/How-to-implement-the-FFT-algorithm)
 
-    while(!end_flag)
-    {
-        printf("Hello World! \n");
-        
-        if(deadline_miss(idx))
-            printf("******Deadline Miss!******** \n");
-
-        wait_for_activation(idx);
-    }
-
-    return NULL;
-}
-```
-
-In `main()`:
-
-```
-int main(void)
-{
-    int task_report; // 0: Ok | 1: Task Issues
-
-    task_report = task_create(helloWorldTask, IDX, PER, PER, PRIO);
-    printf("Hello World Task! Report: %d \n", task_report);
-    wait_for_task(IDX);
-
-    return 0;
-}
-```
-
-https://rosettacode.org/wiki/Fast_Fourier_transform#C
-
-https://www.codeproject.com/Articles/9388/How-to-implement-the-FFT-algorithm
+- [Tutorial 2]https://www.nti-audio.com/en/support/know-how/fast-fourier-transform-fft
