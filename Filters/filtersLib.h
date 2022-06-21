@@ -185,6 +185,7 @@ void clear_reset(BITMAP* window);
 void clear_resetIdx(BITMAP* window, int idx);
 void draw_oscilloscope(BITMAP* osc, BITMAP* window);
 void draw_information(BITMAP* info, BITMAP* window);
+void draw_fft(BITMAP* fft_bitmap, BITMAP* window);
 
 //Keyboard Interpreter
 void keyboard_interp();

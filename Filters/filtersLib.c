@@ -113,7 +113,7 @@ void plotPoint(BITMAP* window, double time, double y, int color)
     int height = window->h;
 
     //Rescale & Plot
-    putpixel(window, (width/XLIM)*time, (height/2) + ((height/2 - 1)/YLIM)*y, color);
+    putpixel(window, (width/XLIM)*time, (height/2) - (height/2 - 1)*y, color);
 }
 
 void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double y_k_1, int color)
@@ -125,7 +125,7 @@ void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double 
     int height = window->h;
 
     //Rescale & Plot
-    line(window, (width/XLIM)*time_k_1, (height/2) + ((height/2 - 1)/YLIM)*y_k_1, (width/XLIM)*time_k, (height/2) + ((height/2 - 1)/YLIM)*y_k, color);
+    line(window, (width/XLIM)*time_k_1, (height/2) - ((height/2 - 1)/YLIM)*y_k_1, (width/XLIM)*time_k, (height/2) - ((height/2 - 1)/YLIM)*y_k, color);
 }
 
 void signalRealization()
@@ -159,7 +159,7 @@ void signalRealization()
         break;
 
         case sawtooth:
-        input_signal.y[0] = -(2.0*input_signal.amplitude/PI) * atan(1.0/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
+        input_signal.y[0] = (2.0*input_signal.amplitude/PI) * atan(1.0/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
         break;
 
         case triang:
@@ -235,19 +235,13 @@ void fftRealization()
         fft(signal_fftData, FFT_DATA);
 
         //Compute Magnitude of i-th Complex Number
-        //printf("FFT Data: {");
         for(i = 0; i < FFT_DATA; i++)
         {
             signal_fftData[i] = sqrt(pow(creal(signal_fftData[i]), 2.0) +  pow(cimag(signal_fftData[i]), 2.0));
-            //printf("%f, ", signal_fftData[i]);
         }
-        //printf("}\n");
 
         //fft_request: Enable plotting fft.
         fft_request = 1;
-
-        //Debug
-        end_flag = 1;
     }
 }
 
@@ -369,10 +363,10 @@ void init_signal()
      * INIT SIGNAL: Define initial parameter of signal. *
      ****************************************************/
     //Init general attributes
-    input_signal.amplitude =    frand(0.5, 0.8);
-    input_signal.frequency =    frand(FREQ_MIN, FREQ_MAX);  //[Hz]
-    input_signal.phase =        frand(0, 2*PI);             //[rad]
-    input_signal.signal_type =  floor(frand(sinusoid, triang));
+    input_signal.amplitude =    0.5; //frand(0.5, 0.8);
+    input_signal.frequency =    10.0; //frand(FREQ_MIN, FREQ_MAX);  //[Hz]
+    input_signal.phase =        0.0; //frand(0, 2*PI);             //[rad]
+    input_signal.signal_type =  sinusoid; //floor(frand(sinusoid, triang));
 
     //Init discrete time parameters
     input_signal.k = 0;
@@ -430,7 +424,6 @@ void clear_reset(BITMAP* window)
             filters[i].y_filtered[j] = 0.0;
         }
     }
-
 }
 
 void clear_resetIdx(BITMAP* window, int idx)
@@ -655,6 +648,32 @@ void draw_information(BITMAP* info, BITMAP* window)
     }
 
     blit(info, window, 0, 0, 0, 0, info->w, info->h); //finally, copies in original screen
+}
+
+void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
+{
+    //Extract dimension of plot
+    int fft_width = fft_bitmap->w;
+    int fft_height = fft_bitmap->h;
+
+    /*DRAW PLOT GRAPHICS*/
+    rect(fft_bitmap, 1, fft_height-1, fft_width-1, 0, WHITE);               //box
+    line(fft_bitmap, 0, fft_height/2, fft_width, fft_height/2, LIGHT_GRAY); //frequency axis
+    textout_ex(fft_bitmap, font, "Mag", 5, 5, LIGHT_GRAY, -1);                                             //amplitude label  
+    textout_centre_ex(fft_bitmap, font, "Freq [Hz]", fft_width - 40, fft_height/2 - 10, LIGHT_GRAY, -1);    //frequency label
+
+    int i;
+    if(fft_request)
+    {
+        for(i = 0; i < FFT_DATA; i++)
+        {
+            putpixel(fft_bitmap, (fft_width/FFT_DATA)*i, (fft_height/2) - (fft_height/2 - 1)*(signal_fftData[i]/(50.0)), RED);
+        }
+
+        fft_request = 0;
+    }
+
+    blit(fft_bitmap, window, 0, 0, 0, INFO_HEIGHT + (HEIGHT-INFO_HEIGHT)/2, fft_width, fft_height); //finally, copies in original screen
 }
 
 void keyboard_interp()
@@ -938,6 +957,10 @@ void *signalTask(void *arg)
         /*COMPUTE SIGNAL*/
         signalRealization();
 
+        //FFT
+        if(fft_enable)
+            fftRealization();
+
         //Successive Sample
         input_signal.k++;
         /*********************************/
@@ -968,9 +991,9 @@ void *filterTask(void* arg)
         /*COMPUTE FILTER*/
         filterRealization(input_signal, idx);
 
-        //FFT (To do)
-        if(fft_enable)
-            fftRealization();           
+        ////FFT (To do)
+        //if(fft_enable)
+        //    fftRealization();           
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
@@ -992,9 +1015,11 @@ void *graphicTask(void* arg)
     BITMAP *screen_copy;    //This copy is necessary to avoid blinking
     BITMAP *osc;            //Plot
     BITMAP *information;    //Information
+    BITMAP *fft_screen;     //FFT display
     screen_copy = create_bitmap(WIDTH, HEIGHT);
-    osc = create_bitmap(WIDTH, HEIGHT-INFO_HEIGHT);
+    osc = create_bitmap(WIDTH, (HEIGHT-INFO_HEIGHT)/2);
     information = create_bitmap(WIDTH, INFO_HEIGHT);
+    fft_screen = create_bitmap(WIDTH, (HEIGHT-INFO_HEIGHT)/2);
     clear_to_color(screen_copy, BLACK);
 
     while(!end_flag)
@@ -1003,6 +1028,7 @@ void *graphicTask(void* arg)
         /***********BODY OF TASK**********/
         draw_information(information, screen_copy);
         draw_oscilloscope(osc, screen_copy);
+        draw_fft(fft_screen, screen_copy);
 
         blit(screen_copy, screen, 0, 0, 0, 0, WIDTH, HEIGHT); //finally, copies in original screen
         /*********************************/
