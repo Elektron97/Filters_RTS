@@ -18,4 +18,4 @@ Author: Daniele Caradonna.
 
 - [Tutorial 1](https://www.codeproject.com/Articles/9388/How-to-implement-the-FFT-algorithm)
 
-- [Tutorial 2]https://www.nti-audio.com/en/support/know-how/fast-fourier-transform-fft
+- [Tutorial 2](https://www.nti-audio.com/en/support/know-how/fast-fourier-transform-fft)
