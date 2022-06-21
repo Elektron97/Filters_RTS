@@ -57,7 +57,7 @@
 #define INFO_FILTER_WIDTH (INFO_SIGNAL_WIDTH + 200)
 
 //axis limit
-#define XLIM 1.0
+#define XLIM 1.0 //Default 1.0
 #define YLIM 1.0
 
 //String maximum length

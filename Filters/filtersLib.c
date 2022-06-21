@@ -473,12 +473,12 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
         if(i == 0)
             sprintf(s_grid, "  %d", i);
         else
-            sprintf(s_grid, "%5.1f", ((float) i)*XLIM/10.0);
+            sprintf(s_grid, "%5.2f", ((float) i)*XLIM/10.0);
 
         if(i == 10)
-            textout_centre_ex(osc, font, s_grid, (osc_width/XLIM)*i/10.0 - 20, osc_height/2 + 10, LIGHT_GRAY, -1);
+            textout_centre_ex(osc, font, s_grid, osc_width*((float) i)/10.0 - 20, osc_height/2 + 10, LIGHT_GRAY, -1);
         else
-            textout_centre_ex(osc, font, s_grid, (osc_width/XLIM)*i/10.0, osc_height/2 + 10, LIGHT_GRAY, -1);
+            textout_centre_ex(osc, font, s_grid, osc_width*((float) i)/10.0, osc_height/2 + 10, LIGHT_GRAY, -1);
     }
 
     for(i = 1; i < 10; i++)
