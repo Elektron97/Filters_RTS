@@ -225,7 +225,6 @@ void fftRealization()
     if(input_signal.k == N_SAMPLE_PERIOD)
     {
         //fill data vector with (2^N - N_SAMPLE_PERIOD) idx with zeros
-        //To do: E' la strada giusta? Vediamo
         int i;
         for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
         {
@@ -663,9 +662,9 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     int i;
     if(fft_request)
     {
-        for(i = 0; i < FFT_DATA; i++)
+        for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
         {
-            putpixel(fft_bitmap, (fft_width/FFT_DATA)*i, (fft_height/2) - (fft_height/2 - 1)*(signal_fftData[i]/(50.0)), RED);
+            putpixel(fft_bitmap, (fft_width/(N_SAMPLE_PERIOD/2))*i, (fft_height/2) - (fft_height/2 - 1)*2.0*(signal_fftData[i]/(50.0)), RED);
         }
 
         fft_request = 0;
