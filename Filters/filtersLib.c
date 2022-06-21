@@ -483,8 +483,8 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
 
     for(i = 1; i < 10; i++)
     {
-        sprintf(s_grid, "%5.1f", 1.0 - ((float) i)*YLIM/10.0);
-        textout_centre_ex(osc, font, s_grid, 7, ((osc_height/2 - 1)/(YLIM))*((float) i)/10.0, LIGHT_GRAY, -1);
+        sprintf(s_grid, "%5.1f", 1.0 - ((float) i)/10.0);
+        textout_centre_ex(osc, font, s_grid, 7, (osc_height/2 - 1)*((float) i)/10.0, LIGHT_GRAY, -1);
     }
 
     /*PLOT SIGNAL AND FILTERS*/
