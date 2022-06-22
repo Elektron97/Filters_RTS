@@ -558,11 +558,9 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
             
             //Reset clear_request to zero
             if(clear_request)
-            {
                 clear_request = 0;
-                clear_fft = 1; //not optimized
-            }
                 
+            clear_fft = 1; //not optimized
         }
     }
 
