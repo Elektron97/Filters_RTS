@@ -106,6 +106,9 @@ enum Plot_Style
     INTERP_LIN
 };
 
+//Complex typedef for FFT
+typedef double complex cplx;
+
 /*STRUCTURES*/
 struct Signal
 {
@@ -124,6 +127,9 @@ struct Signal
     //double y;
     double y[MAX_ORDER + 1]; 
     int    color;
+
+    //fft
+    cplx fftData[FFT_DATA];
 };
 
 struct Filter
@@ -137,6 +143,9 @@ struct Filter
     //double y_filtered;
     double y_filtered[MAX_ORDER + 1]; //{y(k), y(k-1), ..., y(k-MAX_ORDER)}
     int color;
+
+    //fft
+    cplx fftData[FFT_DATA];
 };
 
 /****************************************************
@@ -151,12 +160,6 @@ struct Filter
 /*Global Resources*/
 struct Signal input_signal;
 struct Filter filters[MAX_FILTERS];
-
-//Complex typedef for FFT
-typedef double complex cplx;
-//Data for fft
-cplx signal_fftData[FFT_DATA];
-double frequency_label[2];  //To implement
 
 /*FUNCTION SIGNATURES*/
 //Functions

@@ -217,34 +217,58 @@ void filterRealization(struct Signal signal, int idx)
 
 void fftRealization()
 {
+    int i;
+
     if(input_signal.k < N_SAMPLE_PERIOD)
     {
         //Store Data for FFT 
-        signal_fftData[input_signal.k] = input_signal.y[0];
+        input_signal.fftData[input_signal.k] = input_signal.y[0];
+
+        for(i = 0; i < n_active_filters; i++)
+        {
+            filters[i].fftData[input_signal.k] = filters[i].y_filtered[0];
+        }
     }
 
     if(input_signal.k == N_SAMPLE_PERIOD)
     {
+        //Maybe this can be removed
         //fill data vector with (2^N - N_SAMPLE_PERIOD) idx with zeros
-        int i;
+        //int i;
         for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
         {
-            signal_fftData[i] = 0.0;
+            input_signal.fftData[i] = 0.0;
         }
 
-        fft(signal_fftData, FFT_DATA);
+        fft(input_signal.fftData, FFT_DATA);
+
+        for(i = 0; i < n_active_filters; i++)
+        {
+            fft(filters[i].fftData, FFT_DATA);
+        }
 
         //Compute Magnitude of i-th Complex Number
+        int j;
         for(i = 0; i < FFT_DATA; i++)
         {
-            signal_fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(signal_fftData[i]), 2.0) +  pow(cimag(signal_fftData[i]), 2.0));
+            input_signal.fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(input_signal.fftData[i]), 2.0) +  pow(cimag(input_signal.fftData[i]), 2.0));
+
+            for(j = 0; j < n_active_filters; j++)
+            {
+                filters[j].fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(filters[j].fftData[i]), 2.0) +  pow(cimag(filters[j].fftData[i]), 2.0));
+            }
         }
 
         //P1 = signal_fftData(0:N_SAMPLE_PERIOD/2) -> dim (N_SAMPLE_PERIOD/2) + 1
         //P1[1 : N_SAMPLE_PERIOD/2 - 1] = 2*P1[1 : N_SAMPLE_PERIOD/2 -1]
         for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
         {
-            signal_fftData[i] *= 2.0;
+            input_signal.fftData[i] *= 2.0;
+
+            for(j = 0; j < n_active_filters; j++)
+            {
+                filters[j].fftData[i] *= 2.0;
+            }
         }
 
         //fft_request: Enable plotting fft.
@@ -388,6 +412,11 @@ void init_signal()
     {
         input_signal.y[i] = 0.0;
     }
+
+    for(i = 0; i < FFT_DATA; i++)
+    {
+        input_signal.fftData[i] = 0.0;
+    }
     
     input_signal.color = floor(frand(BLACK, WHITE));
 }
@@ -410,6 +439,11 @@ void init_filter(int idx)
     for(i = 0; i <= MAX_ORDER; i++)
     {
         filters[idx].y_filtered[i] = 0.0;
+    }
+
+    for(i = 0; i < FFT_DATA; i++)
+    {
+        filters[idx].fftData[i] = 0.0;
     }
 }
 
@@ -672,7 +706,7 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     textout_centre_ex(fft_bitmap, font, "Freq [Hz]", fft_width - 40, fft_height/2 - 10, LIGHT_GRAY, -1);    //frequency label
 
     /*GRID*/
-    int i;
+    int i, j;
     if(n_active_filters > 0)
     {
         char s_grid[MAX_CHAR];
@@ -696,6 +730,7 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
         }
     }
 
+    //Plot fft
     if(fft_request)
     {
         switch(plot_style)
@@ -703,14 +738,24 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
             case POINT:
             for(i = 0; i <= N_SAMPLE_PERIOD/2; i++)
             {
-                putpixel(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i])), RED);
+                putpixel(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(input_signal.fftData[i])), input_signal.color);
+
+                for(j = 0; j < n_active_filters; j++)
+                {
+                    putpixel(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(filters[j].fftData[i])), filters[j].color);
+                }
             }
             break;
 
             case INTERP_LIN:
             for(i = 0; i < N_SAMPLE_PERIOD/2; i++)
             {
-                line(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*((i-1)/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i-1])), (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(signal_fftData[i])), RED);
+                line(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*((i-1)/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(input_signal.fftData[i-1])), (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(input_signal.fftData[i])), input_signal.color);
+
+                for(j = 0; j < n_active_filters; j++)
+                {
+                    line(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*((i-1)/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(filters[j].fftData[i-1])), (fft_width*(2.0*input_signal.Ts))*(i/(input_signal.Ts*N_SAMPLE_PERIOD)), (fft_height/2) - (fft_height/2 - 1)*(creal(filters[j].fftData[i])), filters[j].color);
+                }
             }
             break;
 
@@ -729,6 +774,7 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
         fft_request = 0;
     }
 
+    //Clear fft bitmap
     if(clear_fft)
     {
         clear_to_color(fft_bitmap, BLACK);
@@ -736,7 +782,12 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
         //Re-init fft data array
         for(i = 0; i < FFT_DATA; i++)
         {
-            signal_fftData[i] = 0.0;
+            input_signal.fftData[i] = 0.0;
+
+            for(j = 0; j < n_active_filters; j++)
+            {
+                filters[j].fftData[i] = 0.0;
+            }
         }
 
         clear_fft = 0;
