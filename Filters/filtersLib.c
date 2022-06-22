@@ -234,11 +234,10 @@ void fftRealization()
     {
         //Maybe this can be removed
         //fill data vector with (2^N - N_SAMPLE_PERIOD) idx with zeros
-        //int i;
-        for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
+        /*for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
         {
             input_signal.fftData[i] = 0.0;
-        }
+        }*/
 
         fft(input_signal.fftData, FFT_DATA);
 
@@ -623,6 +622,7 @@ void draw_information(BITMAP* info, BITMAP* window)
         textout_ex(info, font, "[5]: Low Pass", BOX_3, 10, WHITE, -1);
         textout_ex(info, font, "[6]: High Pass", BOX_3, 20, WHITE, -1);
         textout_ex(info, font, "[7]: Band Pass", BOX_3, 30, WHITE, -1);
+        textout_ex(info, font, "[F]: FFT", BOX_3, 40, WHITE, -1);
     }
 
     //Signal Information

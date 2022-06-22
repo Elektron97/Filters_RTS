@@ -85,7 +85,7 @@
 #define FFT_DATA 128 //Must be 2^N
 
 /*ENUMS*/
-enum Signal_Type 
+enum Signal_Type
 {
     sinusoid,
     square,
