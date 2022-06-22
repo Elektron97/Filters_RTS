@@ -11,11 +11,3 @@ Author: Daniele Caradonna.
 ### Note to compile and run
 - **To compile**: `/project_folder/make`
 - **To run**: `sudo ./filters`
-
-### Useful Links for FFT
-
-- [Rosetta Code](https://rosettacode.org/wiki/Fast_Fourier_transform#C)
-
-- [Tutorial 1](https://www.codeproject.com/Articles/9388/How-to-implement-the-FFT-algorithm)
-
-- [Tutorial 2](https://www.nti-audio.com/en/support/know-how/fast-fourier-transform-fft)
