@@ -19,7 +19,8 @@ int end_flag = 0;
 int n_active_filters = 0;
 
 //Clear and Reset request
-int clear_request = 0; // If 1, graphic task clears the screen
+int clear_request = 0;  // If 1, graphic task clears the screen
+int clear_fft = 0;      // If 1, graphic task clears fft screen
 
 //FFT enable and request
 int fft_enable = 0; //If 0, no FFT
@@ -524,7 +525,11 @@ void draw_oscilloscope(BITMAP* osc, BITMAP* window)
             
             //Reset clear_request to zero
             if(clear_request)
+            {
                 clear_request = 0;
+                clear_fft = 1; //not optimized
+            }
+                
         }
     }
 
@@ -713,7 +718,28 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
             break;
         }
 
+        //Line o highlight main frequency
+        line(fft_bitmap, (fft_width*(2.0*input_signal.Ts))*input_signal.frequency, (fft_height/2), (fft_width*(2.0*input_signal.Ts))*input_signal.frequency, (fft_height/2) - (fft_height/2 - 1)*(0.05), LIGHT_GRAY);
+        
+        //print main frequency
+        char s_main_freq[6];
+        sprintf(s_main_freq, "%5.1f", input_signal.frequency);
+        textout_centre_ex(fft_bitmap, font, s_main_freq, (fft_width*(2.0*input_signal.Ts))*input_signal.frequency, (fft_height/2) - (fft_height/2 - 1)*(-0.05), YELLOW, -1);
+
         fft_request = 0;
+    }
+
+    if(clear_fft)
+    {
+        clear_to_color(fft_bitmap, BLACK);
+
+        //Re-init fft data array
+        for(i = 0; i < FFT_DATA; i++)
+        {
+            signal_fftData[i] = 0.0;
+        }
+
+        clear_fft = 0;
     }
 
     blit(fft_bitmap, window, 0, 0, 0, INFO_HEIGHT + (HEIGHT-INFO_HEIGHT)/2, fft_width, fft_height); //finally, copies in original screen
