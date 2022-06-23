@@ -31,6 +31,9 @@ int clear_fft = 0;      // If 1, graphic task clears fft screen
 int fft_enable = 0;     //If 0, no FFT
 int fft_request = 0;    //If 1, plot FFT
 
+//Sum and product signals
+enum Signal_Operation signal_operation = NO_OPERATION;
+
 //plot preferences
 enum Plot_Style plot_style = POINT; //Default: POINT
 
@@ -208,6 +211,25 @@ void signalRealization()
 
     // Update signal output
     input_signal.y[0] = waveGenerator(input_signal.amplitude, input_signal.frequency, input_signal.phase, input_signal.t, input_signal.signal_type);
+
+    //Test sum and product
+    switch(signal_operation)
+    {
+        case NO_OPERATION:
+        //No sum or product, return input_signal computed before
+        break;
+
+        case SUM:
+        input_signal.y[0] += waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, sinusoid);
+        break;
+
+        case PROD:
+        input_signal.y[0] *= waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, sinusoid);
+        break;
+
+        default:
+        break;
+    }
 
 }
 
@@ -1043,6 +1065,40 @@ void keyboard_interp()
         {
             filters[n_active_filters-1].filter_type = BAND_PASS;
             clear_request = 1; //re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        /*SUM OR PRODUCT*/
+        case KEY_9:
+        printf("[9] Sum of Signals.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signal_operation != SUM)
+        {
+            signal_operation = SUM;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_0:
+        printf("[0] Product of Signals.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signal_operation != PROD)
+        {
+            signal_operation = PROD;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_BACKSPACE:
+        printf("[BACKSPACE] Single Signal.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(signal_operation != NO_OPERATION)
+        {
+            signal_operation = NO_OPERATION;
+            clear_request = 1;  //Re-plot signal
         }
         pthread_mutex_unlock(&mux_signal);
         break;

@@ -100,6 +100,13 @@ enum Filter_Type
     BAND_PASS
 };
 
+enum Signal_Operation
+{
+    NO_OPERATION,   //no operations
+    SUM,            //sum of signals
+    PROD            //product of signals
+};
+
 enum Plot_Style
 {
     POINT,
