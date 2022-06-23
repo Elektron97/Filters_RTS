@@ -1,3 +1,8 @@
+/************************FILTERS LIBRARY*************************
+ * This library contains every functions used in the real time  *
+ * application "Filters".                                       *
+ ****************************************************************/
+
 /*INCLUDE*/
 //Standard Libraries and Pthred libraries
 #include <stdlib.h>
@@ -19,12 +24,12 @@ int end_flag = 0;
 int n_active_filters = 0;
 
 //Clear and Reset request
-int clear_request = 0;  // If 1, graphic task clears the screen
+int clear_request = 0;  // If 1, graphic task clears oscilloscope screen
 int clear_fft = 0;      // If 1, graphic task clears fft screen
 
 //FFT enable and request
-int fft_enable = 0; //If 0, no FFT
-int fft_request = 0; //If 1, plot FFT
+int fft_enable = 0;     //If 0, no FFT
+int fft_request = 0;    //If 1, plot FFT
 
 //plot preferences
 enum Plot_Style plot_style = POINT; //Default: POINT
@@ -35,14 +40,69 @@ pthread_mutex_t mux_signal = PTHREAD_MUTEX_INITIALIZER;
 /*FUNCTIONS*/
 double sign(double x)
 {
-     /*SIGN FUNCTION:*/
-
+    /*SIGN FUNCTION:*/
     if(x > 0)
         return 1.0;
     if(x < 0)
         return -1.0;
     else
         return 0.0;
+}
+
+double sinWave(double amp, double frequency, double phase, double t)
+{
+    // y(k) = A sin(wt + phi)
+    return amp*sin(2.0*PI*frequency*t + phase);
+}
+
+double squareWave(double amp, double frequency, double phase, double t)
+{
+    // y(k) = A sgn(sin(wt + phi))
+    return amp*sign(sin(2.0*PI*frequency*t + phase));
+}
+
+double sawtoothWave(double amp, double frequency, double phase, double t)
+{
+    return (2.0*amp/PI) * atan(1.0/(tan(PI*frequency*t + phase)));
+}
+
+double triangWave(double amp, double frequency, double phase, double t)
+{
+    return (2.0*amp/PI) * asin(sin(2.0*PI*frequency*t + phase));
+}
+
+double waveGenerator(double amp, double frequency, double phase, double t, int signal_type)
+{
+    //Wave Generator
+    double y;
+
+    switch(signal_type)
+    {
+        case sinusoid:
+        // y(k) = A sin(wt + phi)
+        y = sinWave(amp, frequency, phase, t);
+        break;
+
+        case square:
+        // y(k) = A sgn(sin(wt + phi))
+        y = squareWave(amp, frequency, phase, t);
+        break;
+
+        case sawtooth:
+        y = sawtoothWave(amp, frequency, phase, t);
+        break;
+
+        case triang:
+        y = triangWave(amp, frequency, phase, t);
+        break;
+
+        default:
+        y = 0.0;
+        printf("Singal Type not valid. Output setted to zero!\n");
+        break;
+    }
+
+    return y;
 }
 
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts)
@@ -134,7 +194,7 @@ void signalRealization()
     //Compute time
     input_signal.t = input_signal.k*input_signal.Ts;
 
-    //Update signal's output vector
+    //Shift samples
     int i;
     for(i = MAX_ORDER; i > 0; i--)
     {
@@ -147,31 +207,7 @@ void signalRealization()
     }
 
     // Update signal output
-    switch(input_signal.signal_type)
-    {
-        case sinusoid:
-        // y(k) = A sin(wt + phi)
-        input_signal.y[0] = input_signal.amplitude*sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase);
-        break;
-
-        case square:
-        // y(k) = A sgn(sin(wt + phi))
-        input_signal.y[0] = input_signal.amplitude*sign(sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase));
-        break;
-
-        case sawtooth:
-        input_signal.y[0] = (2.0*input_signal.amplitude/PI) * atan(1.0/(tan(PI*input_signal.frequency*input_signal.t + input_signal.phase)));
-        break;
-
-        case triang:
-        input_signal.y[0] = (2.0*input_signal.amplitude/PI) * asin(sin(2.0*PI*input_signal.frequency*input_signal.t + input_signal.phase));
-        break;
-
-        default:
-        input_signal.y[0] = 0.0;
-        printf("Singal Type not valid. Output setted to zero!\n");
-        break;
-    }
+    input_signal.y[0] = waveGenerator(input_signal.amplitude, input_signal.frequency, input_signal.phase, input_signal.t, input_signal.signal_type);
 
 }
 

@@ -11,8 +11,8 @@
 #define FREQ_MAX 100        // 100 Hz
 
 //n-order filter
-//#define MAX_ORDER 1         //First Order (actually) 
-#define MAX_ORDER 2         //Second Order
+//#define MAX_ORDER 1         //First Order 
+#define MAX_ORDER 2         //Second Order (actually)
 
 /*Task Parameters*/
 //Index
@@ -58,7 +58,7 @@
 
 //axis limit
 #define XLIM 1.0 //Default 1.0
-#define YLIM 1.0
+#define YLIM 1.0 //Fixed
 
 //String maximum length
 #define MAX_CHAR 50
@@ -124,7 +124,6 @@ struct Signal
 
     //Graphic Attribute
     double t;           //[s]
-    //double y;
     double y[MAX_ORDER + 1]; 
     int    color;
 
@@ -140,7 +139,6 @@ struct Filter
     enum Filter_Type filter_type;
 
     //Graphic Attribute
-    //double y_filtered;
     double y_filtered[MAX_ORDER + 1]; //{y(k), y(k-1), ..., y(k-MAX_ORDER)}
     int color;
 
@@ -162,19 +160,35 @@ struct Signal input_signal;
 struct Filter filters[MAX_FILTERS];
 
 /*FUNCTION SIGNATURES*/
-//Functions
+//Maths
 double sign(double x);
+
+//Signal
+double sinWave(double amp, double frequency, double phase, double t);
+double squareWave(double amp, double frequency, double phase, double t);
+double sawtoothWave(double amp, double frequency, double phase, double t);
+double triangWave(double amp, double frequency, double phase, double t);
+double waveGenerator(double amp, double frequency, double phase, double t, int signal_type);
+
+//Filter
 double lowPassFilter(double y_k_1, double x_k_1, double a, double Ts);
 double highPassFilter(double x_k, double x_k_1, double y_k_1, double a, double Ts);
 double bandPassFilter(double x_k_1, double x_k_2, double y_k_1, double y_k_2, double a1, double a2, double Ts);
+
+//Plot style
 void plotPoint(BITMAP* window, double time, double y, int color);
 void plotLin(BITMAP* window, double time_k, double time_k_1, double y_k, double y_k_1, int color);
+
+//Realization
 void signalRealization();
 void filterRealization(struct Signal signal, int idx);
 void fftRealization();
+
+//Debug
 void printSignal(struct Signal signal);
 void printFilter(struct Filter filter);
-/*FFT*/
+
+//FFT
 void _fft(cplx buf[], cplx out[], int n, int step);
 void fft(cplx buf[], int n);
 
