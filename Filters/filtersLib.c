@@ -682,7 +682,8 @@ void draw_information(BITMAP* info, BITMAP* window)
         textout_ex(info, font, "[5]: Low Pass", BOX_3, 10, WHITE, -1);
         textout_ex(info, font, "[6]: High Pass", BOX_3, 20, WHITE, -1);
         textout_ex(info, font, "[7]: Band Pass", BOX_3, 30, WHITE, -1);
-        textout_ex(info, font, "[F]: FFT", BOX_3, 40, WHITE, -1);
+        textout_ex(info, font, "[8]: Sum Signals", BOX_3, 40, WHITE, -1);
+        textout_ex(info, font, "[F]: FFT", BOX_3, 50, WHITE, -1);
     }
 
     //Signal Information
