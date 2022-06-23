@@ -33,6 +33,7 @@ int fft_request = 0;    //If 1, plot FFT
 
 //Sum and product signals
 enum Signal_Operation signal_operation = NO_OPERATION;
+enum Signal_Type second_signal_type;
 
 //plot preferences
 enum Plot_Style plot_style = POINT; //Default: POINT
@@ -220,11 +221,11 @@ void signalRealization()
         break;
 
         case SUM:
-        input_signal.y[0] += waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, sinusoid);
+        input_signal.y[0] += waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, second_signal_type);
         break;
 
         case PROD:
-        input_signal.y[0] *= waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, sinusoid);
+        input_signal.y[0] *= waveGenerator(input_signal.amplitude, 3.0*input_signal.frequency, input_signal.phase, input_signal.t, second_signal_type);
         break;
 
         default:
@@ -476,6 +477,9 @@ void init_signal()
     }
     
     input_signal.color = floor(frand(BLACK, WHITE));
+
+    //sum or product: init second signal type
+    second_signal_type = floor(frand(sinusoid, triang));
 }
 
 void init_filter(int idx)
@@ -1070,8 +1074,8 @@ void keyboard_interp()
         break;
 
         /*SUM OR PRODUCT*/
-        case KEY_9:
-        printf("[9] Sum of Signals.\n");
+        case KEY_8:
+        printf("[8] Sum of Signals.\n");
         pthread_mutex_lock(&mux_signal);
         if(signal_operation != SUM)
         {
@@ -1081,8 +1085,8 @@ void keyboard_interp()
         pthread_mutex_unlock(&mux_signal);
         break;
 
-        case KEY_0:
-        printf("[0] Product of Signals.\n");
+        case KEY_9:
+        printf("[9] Product of Signals.\n");
         pthread_mutex_lock(&mux_signal);
         if(signal_operation != PROD)
         {
@@ -1092,8 +1096,8 @@ void keyboard_interp()
         pthread_mutex_unlock(&mux_signal);
         break;
 
-        case KEY_BACKSPACE:
-        printf("[BACKSPACE] Single Signal.\n");
+        case KEY_0:
+        printf("[0] Single Signal.\n");
         pthread_mutex_lock(&mux_signal);
         if(signal_operation != NO_OPERATION)
         {
@@ -1136,6 +1140,17 @@ void keyboard_interp()
             fft_enable = 1;
             clear_request = 1;
         }
+        break;
+
+        case KEY_BACKSPACE:
+        printf("[BACKSPACE] Disable FFT.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(fft_enable)
+        {
+            fft_enable = 0;
+            clear_request = 1;
+        }
+        pthread_mutex_unlock(&mux_signal);
         break;
 
         /*CLEAR REQUEST*/
