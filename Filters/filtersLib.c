@@ -1270,11 +1270,7 @@ void *filterTask(void* arg)
         pthread_mutex_lock(&mux_signal);
         /***********BODY OF TASK**********/
         /*COMPUTE FILTER*/
-        filterRealization(input_signal, idx);
-
-        ////FFT (To do)
-        //if(fft_enable)
-        //    fftRealization();           
+        filterRealization(input_signal, idx);         
         /*********************************/
         pthread_mutex_unlock(&mux_signal);
 
