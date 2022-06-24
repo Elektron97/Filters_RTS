@@ -675,7 +675,7 @@ void draw_information(BITMAP* info, BITMAP* window)
         textout_ex(info, font, "[2]: Square", BOX_2, 20, WHITE, -1);
         textout_ex(info, font, "[3]: Sawtooth", BOX_2, 30, WHITE, -1);
         textout_ex(info, font, "[4]: Triangular", BOX_2, 40, WHITE, -1);
-        textout_ex(info, font, "[Y]/[W]: Change color", BOX_2, 50, WHITE, -1);
+        textout_ex(info, font, "[F]: FFT", BOX_2, 50, WHITE, -1);
 
         //Second Box
         rect(info, BOX_3 -2, 10-2, BOX_3 + 170, 60, LIGHT_GRAY);
@@ -683,7 +683,7 @@ void draw_information(BITMAP* info, BITMAP* window)
         textout_ex(info, font, "[6]: High Pass", BOX_3, 20, WHITE, -1);
         textout_ex(info, font, "[7]: Band Pass", BOX_3, 30, WHITE, -1);
         textout_ex(info, font, "[8]: Sum Signals", BOX_3, 40, WHITE, -1);
-        textout_ex(info, font, "[F]: FFT", BOX_3, 50, WHITE, -1);
+        textout_ex(info, font, "[9]: Prod Signals", BOX_3, 50, WHITE, -1);
     }
 
     //Signal Information
@@ -1107,6 +1107,51 @@ void keyboard_interp()
         }
         pthread_mutex_unlock(&mux_signal);
         break;
+
+        //change type of second signal
+        case KEY_UP:
+        printf("[UP] Second Signal: Sinusoid.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(second_signal_type != sinusoid)
+        {
+            second_signal_type = sinusoid;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_DOWN:
+        printf("[DOWN] Second Signal: Sinusoid.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(second_signal_type != square)
+        {
+            second_signal_type = square;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_LEFT:
+        printf("[LEFT] Second Signal: Sinusoid.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(second_signal_type != sawtooth)
+        {
+            second_signal_type = sawtooth;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break;
+
+        case KEY_RIGHT:
+        printf("[RIGHT] Second Signal: Sinusoid.\n");
+        pthread_mutex_lock(&mux_signal);
+        if(second_signal_type != triang)
+        {
+            second_signal_type = triang;
+            clear_request = 1;  //Re-plot signal
+        }
+        pthread_mutex_unlock(&mux_signal);
+        break; 
 
         /*CHANGE COLOR OF SIGNAL*/
         //Yellow
