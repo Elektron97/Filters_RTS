@@ -25,7 +25,8 @@ int n_active_filters = 0;
 
 //Clear and Reset request
 int clear_request = 0;  // If 1, graphic task clears oscilloscope screen
-int clear_fft = 0;      // If 1, graphic task clears fft screen
+int clear_fft = 0;      // If 1, graphic task clears fft screen and re-init fft data
+int clear_fft2 = 0;     //If 1, graphic task clears only fft screen
 
 //FFT enable and request
 int fft_enable = 0;     //If 0, no FFT
@@ -345,13 +346,13 @@ void fftRealization()
     else
     {
         //Array Overflow
-        for(i = FFT_DATA - 1; i > 0; i--)
+        for(i = 0; i < FFT_DATA -1; i++)
         {
-            input_signal.fftSamples[i]= input_signal.fftSamples[i-1];
+            input_signal.fftSamples[i] = input_signal.fftSamples[i+1];
 
             for(j = 0; j < n_active_filters; j++)
             {
-                filters[j].fftSamples[i]= filters[j].fftSamples[i-1];
+                filters[j].fftSamples[i]= filters[j].fftSamples[i+1];
             }
         }
 
@@ -364,6 +365,7 @@ void fftRealization()
         }
 
     }
+
 
     //Copy fftSamples in fftData
     for(i = 0; i < FFT_DATA; i++)
@@ -406,8 +408,9 @@ void fftRealization()
             filters[j].fftData[i] *= 2.0;
         }
     }
-    
+
     //fft_request: Enable plotting fft.
+    clear_fft2 = 1;
     fft_request = 1;
 }
 
@@ -837,6 +840,37 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     int fft_width = fft_bitmap->w;
     int fft_height = fft_bitmap->h;
 
+    int i, j;
+
+    if(clear_fft2)
+    {
+        clear_to_color(fft_bitmap, BLACK);
+        clear_fft2 = 0;
+
+    }
+
+    //Clear fft bitmap
+    if(clear_fft)
+    {
+        clear_to_color(fft_bitmap, BLACK);
+
+        //Re-init fft data array
+        for(i = 0; i < FFT_DATA; i++)
+        {
+            input_signal.fftSamples[i] = 0.0;
+            input_signal.fftData[i] = 0.0;
+
+            for(j = 0; j < n_active_filters; j++)
+            {
+                filters[j].fftSamples[i] = 0.0;
+                filters[j].fftData[i] = 0.0;
+            }
+        }
+
+        clear_fft = 0;
+        
+    }
+
     /*DRAW PLOT GRAPHICS*/
     rect(fft_bitmap, 1, fft_height-1, fft_width-1, 0, WHITE);               //box
     line(fft_bitmap, 0, fft_height/2, fft_width, fft_height/2, LIGHT_GRAY); //frequency axis
@@ -844,7 +878,6 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     textout_centre_ex(fft_bitmap, font, "Freq [Hz]", fft_width - 40, fft_height/2 - 10, LIGHT_GRAY, -1);    //frequency label
 
     /*GRID*/
-    int i, j;
     if(n_active_filters > 0)
     {
         char s_grid[MAX_CHAR];
@@ -910,27 +943,6 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
         textout_centre_ex(fft_bitmap, font, s_main_freq, (fft_width*(2.0*input_signal.Ts))*input_signal.frequency, (fft_height/2) - (fft_height/2 - 1)*(-0.05), YELLOW, -1);
 
         fft_request = 0;
-    }
-
-    //Clear fft bitmap
-    if(clear_fft)
-    {
-        clear_to_color(fft_bitmap, BLACK);
-
-        //Re-init fft data array
-        for(i = 0; i < FFT_DATA; i++)
-        {
-            input_signal.fftSamples[i] = 0.0;
-            input_signal.fftData[i] = 0.0;
-
-            for(j = 0; j < n_active_filters; j++)
-            {
-                filters[j].fftSamples[i] = 0.0;
-                filters[j].fftData[i] = 0.0;
-            }
-        }
-
-        clear_fft = 0;
     }
 
     blit(fft_bitmap, window, 0, 0, 0, INFO_HEIGHT + (HEIGHT-INFO_HEIGHT)/2, fft_width, fft_height); //finally, copies in original screen
