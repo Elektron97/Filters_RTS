@@ -275,59 +275,6 @@ void filterRealization(struct Signal signal, int idx)
     
 }
 
-/*void fftRealization()
-{
-    int i;
-
-    if(input_signal.k < N_SAMPLE_PERIOD)
-    {
-        //Store Data for FFT 
-        input_signal.fftData[input_signal.k] = input_signal.y[0];
-
-        for(i = 0; i < n_active_filters; i++)
-        {
-            filters[i].fftData[input_signal.k] = filters[i].y_filtered[0];
-        }
-    }
-
-    if(input_signal.k == N_SAMPLE_PERIOD)
-    {
-        fft(input_signal.fftData, FFT_DATA);
-
-        for(i = 0; i < n_active_filters; i++)
-        {
-            fft(filters[i].fftData, FFT_DATA);
-        }
-
-        //Compute Magnitude of i-th Complex Number
-        int j;
-        for(i = 0; i < FFT_DATA; i++)
-        {
-            input_signal.fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(input_signal.fftData[i]), 2.0) +  pow(cimag(input_signal.fftData[i]), 2.0));
-
-            for(j = 0; j < n_active_filters; j++)
-            {
-                filters[j].fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(filters[j].fftData[i]), 2.0) +  pow(cimag(filters[j].fftData[i]), 2.0));
-            }
-        }
-
-        //P1 = signal_fftData(0:N_SAMPLE_PERIOD/2) -> dim (N_SAMPLE_PERIOD/2) + 1
-        //P1[1 : N_SAMPLE_PERIOD/2 - 1] = 2*P1[1 : N_SAMPLE_PERIOD/2 -1]
-        for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
-        {
-            input_signal.fftData[i] *= 2.0;
-
-            for(j = 0; j < n_active_filters; j++)
-            {
-                filters[j].fftData[i] *= 2.0;
-            }
-        }
-
-        //fft_request: Enable plotting fft.
-        fft_request = 1;
-    }
-}*/
-
 void fftRealization()
 {
     int i, j;
@@ -365,7 +312,6 @@ void fftRealization()
         }
 
     }
-
 
     //Copy fftSamples in fftData
     for(i = 0; i < FFT_DATA; i++)
@@ -846,7 +792,6 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
     {
         clear_to_color(fft_bitmap, BLACK);
         clear_fft2 = 0;
-
     }
 
     //Clear fft bitmap
