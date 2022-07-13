@@ -135,6 +135,7 @@ struct Signal
     int    color;
 
     //fft
+    cplx fftSamples[FFT_DATA];
     cplx fftData[FFT_DATA];
 };
 
@@ -150,6 +151,7 @@ struct Filter
     int color;
 
     //fft
+    cplx fftSamples[FFT_DATA];
     cplx fftData[FFT_DATA];
 };
 

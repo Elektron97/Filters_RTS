@@ -274,7 +274,7 @@ void filterRealization(struct Signal signal, int idx)
     
 }
 
-void fftRealization()
+/*void fftRealization()
 {
     int i;
 
@@ -291,13 +291,6 @@ void fftRealization()
 
     if(input_signal.k == N_SAMPLE_PERIOD)
     {
-        //Maybe this can be removed
-        //fill data vector with (2^N - N_SAMPLE_PERIOD) idx with zeros
-        /*for(i = N_SAMPLE_PERIOD; i < FFT_DATA; i++)
-        {
-            input_signal.fftData[i] = 0.0;
-        }*/
-
         fft(input_signal.fftData, FFT_DATA);
 
         for(i = 0; i < n_active_filters; i++)
@@ -332,6 +325,90 @@ void fftRealization()
         //fft_request: Enable plotting fft.
         fft_request = 1;
     }
+}*/
+
+void fftRealization()
+{
+    int i, j;
+
+    if(input_signal.k < FFT_DATA)
+    {
+        //Store Samples for FFT 
+        input_signal.fftSamples[input_signal.k] = input_signal.y[0];
+
+        for(i = 0; i < n_active_filters; i++)
+        {
+            filters[i].fftSamples[input_signal.k] = filters[i].y_filtered[0];
+        }
+    }
+
+    else
+    {
+        //Array Overflow
+        for(i = FFT_DATA - 1; i > 0; i--)
+        {
+            input_signal.fftSamples[i]= input_signal.fftSamples[i-1];
+
+            for(j = 0; j < n_active_filters; j++)
+            {
+                filters[j].fftSamples[i]= filters[j].fftSamples[i-1];
+            }
+        }
+
+        //Store Samples for FFT 
+        input_signal.fftSamples[FFT_DATA-1] = input_signal.y[0];
+
+        for(i = 0; i < n_active_filters; i++)
+        {
+            filters[i].fftSamples[FFT_DATA-1] = filters[i].y_filtered[0];
+        }
+
+    }
+
+    //Copy fftSamples in fftData
+    for(i = 0; i < FFT_DATA; i++)
+    {
+        input_signal.fftData[i] = input_signal.fftSamples[i];
+
+        for(j = 0; j < n_active_filters; j++)
+        {
+            filters[j].fftData[i] = filters[j].fftSamples[i];
+        }
+    }
+
+    //Compute FFT
+    fft(input_signal.fftData, FFT_DATA);
+
+    for(i = 0; i < n_active_filters; i++)
+    {
+        fft(filters[i].fftData, FFT_DATA);
+    }
+
+    //Compute Magnitude of i-th Complex Number
+    for(i = 0; i < FFT_DATA; i++)
+    {
+        input_signal.fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(input_signal.fftData[i]), 2.0) +  pow(cimag(input_signal.fftData[i]), 2.0));
+
+        for(j = 0; j < n_active_filters; j++)
+        {
+            filters[j].fftData[i] = (1.0/N_SAMPLE_PERIOD)*sqrt(pow(creal(filters[j].fftData[i]), 2.0) +  pow(cimag(filters[j].fftData[i]), 2.0));
+        }
+    }
+
+    //P1 = signal_fftData(0:N_SAMPLE_PERIOD/2) -> dim (N_SAMPLE_PERIOD/2) + 1
+    //P1[1 : N_SAMPLE_PERIOD/2 - 1] = 2*P1[1 : N_SAMPLE_PERIOD/2 -1]
+    for(i = 1; i < N_SAMPLE_PERIOD/2; i++)
+    {
+        input_signal.fftData[i] *= 2.0;
+
+        for(j = 0; j < n_active_filters; j++)
+        {
+            filters[j].fftData[i] *= 2.0;
+        }
+    }
+    
+    //fft_request: Enable plotting fft.
+    fft_request = 1;
 }
 
 void printSignal(struct Signal signal)
@@ -843,10 +920,12 @@ void draw_fft(BITMAP* fft_bitmap, BITMAP* window)
         //Re-init fft data array
         for(i = 0; i < FFT_DATA; i++)
         {
+            input_signal.fftSamples[i] = 0.0;
             input_signal.fftData[i] = 0.0;
 
             for(j = 0; j < n_active_filters; j++)
             {
+                filters[j].fftSamples[i] = 0.0;
                 filters[j].fftData[i] = 0.0;
             }
         }
